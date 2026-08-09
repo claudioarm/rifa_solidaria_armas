@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Control de Rifa 000-999</title>
+  <style>
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body { background: #f8fafc; margin: 0; padding: 12px; text-align: center; color: #0f172a; }
+    
+    h1 { font-size: 1.4rem; margin: 5px 0 12px 0; }
+    
+    /* Contores y Estadísticas */
+    .stats { display: flex; justify-content: space-around; background: white; padding: 10px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); margin-bottom: 12px; }
+    .stat-box { display: flex; flex-direction: column; align-items: center; }
+    .stat-label { font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; }
+    .stat-val { font-size: 1.2rem; font-weight: 800; }
+    .val-avail { color: #64748b; }
+    .val-pending { color: #d97706; }
+    .val-paid { color: #16a34a; }
+
+    /* Selector de Planilla */
+    .sheet-selector { margin-bottom: 15px; }
+    .sheet-selector label { font-size: 0.9rem; font-weight: bold; margin-right: 8px; }
+    .sheet-selector select { padding: 8px 12px; font-size: 0.95rem; border-radius: 8px; border: 1px solid #cbd5e1; background: white; font-weight: bold; }
+
+    /* Cuadrícula de Números */
+    .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; max-width: 500px; margin: 0 auto; }
+    @media (min-width: 480px) { .grid { grid-template-columns: repeat(10, 1fr); } }
+
+    /* Fichas de Números */
+    .card { background: white; border: 2px solid #e2e8f0; border-radius: 6px; padding: 10px 0; font-weight: 700; font-size: 0.95rem; cursor: pointer; user-select: none; position: relative; transition: transform 0.1s; }
+    .card:active { transform: scale(0.95); }
+
+    /* Estado: Pendiente (Sin comprobante) -> Naranja */
+    .card.pending { background: #fef3c7; border-color: #f59e0b; color: #b45309; }
+    .card.pending::after { content: "X"; position: absolute; top: 1px; right: 3px; font-size: 0.65rem; color: #d97706; font-weight: 900; }
+
+    /* Estado: Pagado (Con comprobante) -> Verde */
+    .card.paid { background: #dcfce7; border-color: #22c55e; color: #15803d; }
+    .card.paid::after { content: "X"; position: absolute; top: 1px; right: 3px; font-size: 0.65rem; color: #16a34a; font-weight: 900; }
+  </style>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    // ⚠️ REEMPLAZA ESTO CON LA URL DE TU BASE DE DATOS DE FIREBASE
+    const firebaseConfig = {
+      databaseURL: "https://console.firebase.google.com/u/0/project/rifa-solidaria-c02ba/database?hl=es-419"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const numbersRef = ref(db, 'numbers');
+
+    let currentSheet = 0; // Planilla activa (0 a 9)
+    let allData = {};
+
+    const grid = document.getElementById('grid');
+    const sheetSelect = document.getElementById('sheetSelect');
+
+    // Inicializar selector de 10 planillas
+    for (let s = 0; s < 10; s++) {
+      const start = String(s * 100).padStart(3, '0');
+      const end = String((s * 100) + 99).padStart(3, '0');
+      const opt = document.createElement('option');
+      opt.value = s;
+      opt.innerText = `Planilla ${s + 1} (${start} al ${end})`;
+      sheetSelect.appendChild(opt);
+    }
+
+    sheetSelect.addEventListener('change', (e) => {
+      currentSheet = parseInt(e.target.value);
+      renderGrid();
+    });
+
+    // Escuchar cambios en Firebase en tiempo real
+    onValue(numbersRef, (snapshot) => {
+      allData = snapshot.val() || {};
+      updateGlobalStats();
+      renderGrid();
+    });
+
+    // Renderizar los 100 números de la planilla seleccionada
+    function renderGrid() {
+      grid.innerHTML = '';
+      const startNum = currentSheet * 100;
+
+      for (let i = startNum; i < startNum + 100; i++) {
+        const numStr = String(i).padStart(3, '0');
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerText = numStr;
+
+        const info = allData[numStr];
+        if (info) {
+          if (info.status === 'paid') div.classList.add('paid');
+          if (info.status === 'pending') div.classList.add('pending');
+        }
+
+        div.onclick = () => handleNumberClick(numStr, info);
+        grid.appendChild(div);
+      }
+    }
+
+    // Actualizar contadores totales (los 1,000 números)
+    function updateGlobalStats() {
+      let paidCount = 0;
+      let pendingCount = 0;
+
+      Object.values(allData).forEach(item => {
+        if (item.status === 'paid') paidCount++;
+        if (item.status === 'pending') pendingCount++;
+      });
+
+      document.getElementById('paidCount').innerText = paidCount;
+      document.getElementById('pendingCount').innerText = pendingCount;
+      document.getElementById('availCount').innerText = 1000 - (paidCount + pendingCount);
+    }
+
+    // Lógica al hacer clic en un número
+    window.handleNumberClick = (numStr, currentInfo) => {
+      if (!currentInfo) {
+        // Número Disponible: Marcar nuevo comprador
+        const buyer = prompt(`Número ${numStr}\nIngresa el nombre del comprador:`);
+        if (!buyer) return;
+
+        const hasReceipt = confirm(`¿Tiene comprobante / ya pagó el número ${numStr}?\n\n- [Aceptar] = SÍ (Pagado / Verde)\n- [Cancelar] = NO (Pendiente / Naranja)`);
+        const status = hasReceipt ? 'paid' : 'pending';
+
+        set(ref(db, `numbers/${numStr}`), { buyer, status });
+      } else {
+        // Número Ocupado: Editar estado o liberar
+        const currentStatusText = currentInfo.status === 'paid' ? 'PAGADO (Verde)' : 'PENDIENTE (Naranja)';
+        const option = prompt(
+          `Número ${numStr} - Comprador: ${currentInfo.buyer}\nEstado actual: ${currentStatusText}\n\n` +
+          `¿Qué deseas hacer?\n` +
+          `1 = Cambiar a PAGADO (Verde)\n` +
+          `2 = Cambiar a PENDIENTE (Naranja)\n` +
+          `3 = LIBERAR NÚMERO (Borrar y dejar disponible)`
+        );
+
+        if (option === '1') set(ref(db, `numbers/${numStr}/status`), 'paid');
+        else if (option === '2') set(ref(db, `numbers/${numStr}/status`), 'pending');
+        else if (option === '3') remove(ref(db, `numbers/${numStr}`));
+      }
+    };
+  </script>
+</head>
+<body>
+
+  <h1>Control de Rifa (000 - 999)</h1>
+
+  <!-- Estadísticas de los 1,000 números -->
+  <div class="stats">
+    <div class="stat-box">
+      <span class="stat-label">Libres</span>
+      <span id="availCount" class="stat-val val-avail">1000</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-label">Pendiente</span>
+      <span id="pendingCount" class="stat-val val-pending">0</span>
+    </div>
+    <div class="stat-box">
+      <span class="stat-label">Pagados</span>
+      <span id="paidCount" class="stat-val val-paid">0</span>
+    </div>
+  </div>
+
+  <!-- Selector de Planillas (1 a 10) -->
+  <div class="sheet-selector">
+    <label for="sheetSelect">Planilla:</label>
+    <select id="sheetSelect"></select>
+  </div>
+
+  <!-- Cuadrícula -->
+  <div class="grid" id="grid"></div>
+
+</body>
+</html>
