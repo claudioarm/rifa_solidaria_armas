@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rifa Solidaria Chiki - Números Disponibles</title>
+  <style>
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    
+    /* Fondo Azul */
+    body { 
+      background: #0f172a; 
+      margin: 0; 
+      padding: 12px; 
+      text-align: center; 
+      color: #f8fafc; 
+    }
+    
+    h1 { font-size: 1.6rem; margin: 5px 0 5px 0; color: #38bdf8; }
+    p.subtitle { color: #94a3b8; font-size: 0.9rem; margin-top: 0; margin-bottom: 15px; }
+
+    /* Buscador y Selector de Planillas */
+    .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; max-width: 500px; margin-left: auto; margin-right: auto; }
+    .search-box input { width: 100%; padding: 10px; font-size: 1rem; border-radius: 8px; border: 2px solid #334155; background: #1e293b; color: #ffffff; text-align: center; font-weight: bold; }
+    .search-box input::placeholder { color: #64748b; }
+    .sheet-selector select { width: 100%; padding: 10px; font-size: 0.95rem; border-radius: 8px; border: 2px solid #334155; background: #1e293b; color: #ffffff; font-weight: bold; }
+
+    /* Cuadrícula de Números */
+    .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; max-width: 500px; margin: 0 auto; }
+    @media (min-width: 480px) { .grid { grid-template-columns: repeat(10, 1fr); } }
+
+    /* Fichas de Números Libres */
+    .card { background: #1e293b; border: 2px solid #334155; border-radius: 6px; padding: 12px 0; font-weight: 700; font-size: 1rem; user-select: none; position: relative; color: #f8fafc; }
+
+    /* Estado: Ocupado (Rojo con X) */
+    .card.taken { background: #451215; border-color: #991b1b; color: #fca5a5; }
+    .card.taken::after { content: "X"; position: absolute; top: 1px; right: 4px; font-size: 0.7rem; color: #ef4444; font-weight: 900; }
+
+    /* Resaltado de Búsqueda */
+    .card.highlight { outline: 3px solid #38bdf8; transform: scale(1.05); border-color: #38bdf8; }
+  </style>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+    const firebaseConfig = {
+      databaseURL: "https://rifa-solidaria-c02ba-default-rtdb.firebaseio.com"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const numbersRef = ref(db, 'numbers');
+
+    let currentSheet = 0;
+    let allData = {};
+
+    const grid = document.getElementById('grid');
+    const sheetSelect = document.getElementById('sheetSelect');
+    const searchInput = document.getElementById('searchInput');
+
+    // Cargar selector de 10 planillas
+    for (let s = 0; s < 10; s++) {
+      const start = String(s * 100).padStart(3, '0');
+      const end = String((s * 100) + 99).padStart(3, '0');
+      const opt = document.createElement('option');
+      opt.value = s;
+      opt.innerText = `Planilla ${s + 1} (${start} al ${end})`;
+      sheetSelect.appendChild(opt);
+    }
+
+    sheetSelect.addEventListener('change', (e) => {
+      currentSheet = parseInt(e.target.value);
+      renderGrid();
+    });
+
+    searchInput.addEventListener('input', (e) => {
+      const query = e.target.value.trim();
+      if (query.length === 3) {
+        const num = parseInt(query);
+        if (!isNaN(num) && num >= 0 && num <= 999) {
+          const targetSheet = Math.floor(num / 100);
+          sheetSelect.value = targetSheet;
+          currentSheet = targetSheet;
+          renderGrid(query);
+        }
+      } else {
+        renderGrid();
+      }
+    });
+
+    // Escuchar cambios en tiempo real
+    onValue(numbersRef, (snapshot) => {
+      allData = snapshot.val() || {};
+      renderGrid();
+    });
+
+    function renderGrid(highlightNum = null) {
+      grid.innerHTML = '';
+      const startNum = currentSheet * 100;
+
+      for (let i = startNum; i < startNum + 100; i++) {
+        const numStr = String(i).padStart(3, '0');
+        const div = document.createElement('div');
+        div.className = 'card';
+        div.innerText = numStr;
+
+        const info = allData[numStr];
+        if (info && (info.status === 'paid' || info.status === 'pending')) {
+          div.classList.add('taken');
+        }
+
+        if (highlightNum && numStr === highlightNum) {
+          div.classList.add('highlight');
+        }
+
+        grid.appendChild(div);
+      }
+    }
+  </script>
+</head>
+<body>
+
+  <h1>Rifa solidaria chiki</h1>
+  <p class="subtitle">Estado de números en tiempo real</p>
+
+  <div class="controls">
+    <div class="search-box">
+      <input type="text" id="searchInput" maxlength="3" placeholder="Buscar número (ej: 045)...">
+    </div>
+    <div class="sheet-selector">
+      <select id="sheetSelect"></select>
+    </div>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+</body>
+</html>
