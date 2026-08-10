@@ -7,37 +7,45 @@
   <style>
     * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
     
-    /* Fondo Azul */
+    /* Fondo Azul Tradicional */
     body { 
-      background: #0f172a; 
+      background: #1d4ed8; 
       margin: 0; 
       padding: 12px; 
       text-align: center; 
-      color: #f8fafc; 
+      color: #ffffff; 
     }
     
-    h1 { font-size: 1.6rem; margin: 5px 0 5px 0; color: #38bdf8; }
-    p.subtitle { color: #94a3b8; font-size: 0.9rem; margin-top: 0; margin-bottom: 15px; }
+    /* Título en Dorado con Brillo */
+    h1 { 
+      font-size: 1.8rem; 
+      margin: 5px 0 5px 0; 
+      color: #fbbf24; 
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.4);
+      font-weight: 800;
+    }
+    
+    p.subtitle { color: #e0e7ff; font-size: 0.95rem; margin-top: 0; margin-bottom: 15px; }
 
     /* Buscador y Selector de Planillas */
     .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; max-width: 500px; margin-left: auto; margin-right: auto; }
-    .search-box input { width: 100%; padding: 10px; font-size: 1rem; border-radius: 8px; border: 2px solid #334155; background: #1e293b; color: #ffffff; text-align: center; font-weight: bold; }
-    .search-box input::placeholder { color: #64748b; }
-    .sheet-selector select { width: 100%; padding: 10px; font-size: 0.95rem; border-radius: 8px; border: 2px solid #334155; background: #1e293b; color: #ffffff; font-weight: bold; }
+    .search-box input { width: 100%; padding: 10px; font-size: 1rem; border-radius: 8px; border: 2px solid #bfdbfe; background: #ffffff; color: #1e3a8a; text-align: center; font-weight: bold; }
+    .search-box input::placeholder { color: #94a3b8; }
+    .sheet-selector select { width: 100%; padding: 10px; font-size: 0.95rem; border-radius: 8px; border: 2px solid #bfdbfe; background: #ffffff; color: #1e3a8a; font-weight: bold; }
 
     /* Cuadrícula de Números */
     .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; max-width: 500px; margin: 0 auto; }
     @media (min-width: 480px) { .grid { grid-template-columns: repeat(10, 1fr); } }
 
-    /* Fichas de Números Libres */
-    .card { background: #1e293b; border: 2px solid #334155; border-radius: 6px; padding: 12px 0; font-weight: 700; font-size: 1rem; user-select: none; position: relative; color: #f8fafc; }
+    /* Fichas de Números Libres (Blancas) */
+    .card { background: #ffffff; border: 2px solid #bfdbfe; border-radius: 6px; padding: 12px 0; font-weight: 700; font-size: 1rem; user-select: none; position: relative; color: #1e3a8a; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
 
     /* Estado: Ocupado (Rojo con X) */
-    .card.taken { background: #451215; border-color: #991b1b; color: #fca5a5; }
-    .card.taken::after { content: "X"; position: absolute; top: 1px; right: 4px; font-size: 0.7rem; color: #ef4444; font-weight: 900; }
+    .card.taken { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }
+    .card.taken::after { content: "X"; position: absolute; top: 1px; right: 4px; font-size: 0.7rem; color: #dc2626; font-weight: 900; }
 
     /* Resaltado de Búsqueda */
-    .card.highlight { outline: 3px solid #38bdf8; transform: scale(1.05); border-color: #38bdf8; }
+    .card.highlight { outline: 3px solid #fbbf24; transform: scale(1.05); border-color: #fbbf24; }
   </style>
 
   <!-- Firebase SDK -->
