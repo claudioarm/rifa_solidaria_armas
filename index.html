@@ -3,26 +3,28 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rifa solidaria Chiki</title>
+  <title>Rifa solidaria chiki</title>
   <style>
     * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
     body { background: #f8fafc; margin: 0; padding: 12px; text-align: center; color: #0f172a; }
     
-    h1 { font-size: 1.4rem; margin: 5px 0 12px 0; }
+    h1 { font-size: 1.4rem; margin: 5px 0 12px 0; color: #1e293b; }
     
-    /* Contores y Estadísticas */
+    /* Contadores y Estadísticas */
     .stats { display: flex; justify-content: space-around; background: white; padding: 10px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); margin-bottom: 12px; }
     .stat-box { display: flex; flex-direction: column; align-items: center; }
-    .stat-label { font-size: 0.75rem; color: #64748b; font-weight: 600; text-transform: uppercase; }
-    .stat-val { font-size: 1.2rem; font-weight: 800; }
+    .stat-label { font-size: 0.7rem; color: #64748b; font-weight: 600; text-transform: uppercase; }
+    .stat-val { font-size: 1.1rem; font-weight: 800; }
     .val-avail { color: #64748b; }
     .val-pending { color: #d97706; }
     .val-paid { color: #16a34a; }
+    .val-money { color: #2563eb; }
 
-    /* Selector de Planilla */
-    .sheet-selector { margin-bottom: 15px; }
-    .sheet-selector label { font-size: 0.9rem; font-weight: bold; margin-right: 8px; }
-    .sheet-selector select { padding: 8px 12px; font-size: 0.95rem; border-radius: 8px; border: 1px solid #cbd5e1; background: white; font-weight: bold; }
+    /* Precio por número y Selector de Planilla */
+    .controls { display: flex; justify-content: center; align-items: center; gap: 12px; margin-bottom: 15px; flex-wrap: wrap; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
+    .controls label { font-size: 0.85rem; font-weight: bold; }
+    .controls input { width: 95px; padding: 6px; font-size: 0.9rem; border-radius: 6px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold; }
+    .controls select { padding: 6px 10px; font-size: 0.9rem; border-radius: 6px; border: 1px solid #cbd5e1; background: white; font-weight: bold; }
 
     /* Cuadrícula de Números */
     .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; max-width: 500px; margin: 0 auto; }
@@ -46,20 +48,20 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-    // ⚠️ REEMPLAZA ESTO CON LA URL DE TU BASE DE DATOS DE FIREBASE
     const firebaseConfig = {
-      databaseURL: "https://rifa-solidaria-c02ba-default-rtdb.firebaseio.com/"
+      databaseURL: "https://rifa-solidaria-c02ba-default-rtdb.firebaseio.com"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
     const numbersRef = ref(db, 'numbers');
 
-    let currentSheet = 0; // Planilla activa (0 a 9)
+    let currentSheet = 0;
     let allData = {};
 
     const grid = document.getElementById('grid');
     const sheetSelect = document.getElementById('sheetSelect');
+    const ticketPriceInput = document.getElementById('ticketPrice');
 
     // Inicializar selector de 10 planillas
     for (let s = 0; s < 10; s++) {
@@ -74,6 +76,10 @@
     sheetSelect.addEventListener('change', (e) => {
       currentSheet = parseInt(e.target.value);
       renderGrid();
+    });
+
+    ticketPriceInput.addEventListener('input', () => {
+      updateGlobalStats();
     });
 
     // Escuchar cambios en Firebase en tiempo real
@@ -105,7 +111,7 @@
       }
     }
 
-    // Actualizar contadores totales (los 1,000 números)
+    // Actualizar contadores totales y recaudación
     function updateGlobalStats() {
       let paidCount = 0;
       let pendingCount = 0;
@@ -115,9 +121,13 @@
         if (item.status === 'pending') pendingCount++;
       });
 
+      const price = parseFloat(ticketPriceInput.value) || 0;
+      const totalMoney = paidCount * price;
+
       document.getElementById('paidCount').innerText = paidCount;
       document.getElementById('pendingCount').innerText = pendingCount;
       document.getElementById('availCount').innerText = 1000 - (paidCount + pendingCount);
+      document.getElementById('totalMoney').innerText = '$' + totalMoney.toLocaleString('es-AR');
     }
 
     // Lógica al hacer clic en un número
@@ -151,7 +161,7 @@
 </head>
 <body>
 
-  <h1>Rifa solidaria Chiki</h1>
+  <h1>Rifa solidaria chiki</h1>
 
   <!-- Estadísticas de los 1,000 números -->
   <div class="stats">
@@ -167,12 +177,22 @@
       <span class="stat-label">Pagados</span>
       <span id="paidCount" class="stat-val val-paid">0</span>
     </div>
+    <div class="stat-box">
+      <span class="stat-label">Recaudado</span>
+      <span id="totalMoney" class="stat-val val-money">$0</span>
+    </div>
   </div>
 
-  <!-- Selector de Planillas (1 a 10) -->
-  <div class="sheet-selector">
-    <label for="sheetSelect">Planilla:</label>
-    <select id="sheetSelect"></select>
+  <!-- Ajuste de Precio y Selector de Planillas -->
+  <div class="controls">
+    <div>
+      <label for="ticketPrice">Precio ($):</label>
+      <input type="number" id="ticketPrice" value="20000" placeholder="20000">
+    </div>
+    <div>
+      <label for="sheetSelect">Planilla:</label>
+      <select id="sheetSelect"></select>
+    </div>
   </div>
 
   <!-- Cuadrícula -->
