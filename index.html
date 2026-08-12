@@ -2,42 +2,152 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Rifa Solidaria Chiki - Números Disponibles</title>
+  
+  <!-- Librería pública para convertir el contenido en imagen PNG -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
   <style>
-    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
     
-    /* Fondo Azul */
-    body { 
-      background: #0f172a; 
-      margin: 0; 
-      padding: 12px; 
-      text-align: center; 
-      color: #f8fafc; 
+    html, body {
+      width: 100%;
+      min-height: 100vh;
+      background: #1d4ed8; 
+      color: #ffffff; 
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 8px;
     }
     
-    h1 { font-size: 1.6rem; margin: 5px 0 5px 0; color: #38bdf8; }
-    p.subtitle { color: #94a3b8; font-size: 0.9rem; margin-top: 0; margin-bottom: 15px; }
+    /* Contenedor que se convertirá en imagen */
+    #captureArea {
+      background: #1d4ed8;
+      padding: 8px;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
 
-    /* Buscador y Selector de Planillas */
-    .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; max-width: 500px; margin-left: auto; margin-right: auto; }
-    .search-box input { width: 100%; padding: 10px; font-size: 1rem; border-radius: 8px; border: 2px solid #334155; background: #1e293b; color: #ffffff; text-align: center; font-weight: bold; }
-    .search-box input::placeholder { color: #64748b; }
-    .sheet-selector select { width: 100%; padding: 10px; font-size: 0.95rem; border-radius: 8px; border: 2px solid #334155; background: #1e293b; color: #ffffff; font-weight: bold; }
+    header { text-align: center; margin-bottom: 4px; }
+    
+    h1 { 
+      font-size: 1.3rem; 
+      color: #fbbf24; 
+      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+      font-weight: 800;
+      line-height: 1.2;
+    }
+    
+    .subtitle { color: #e0e7ff; font-size: 0.8rem; font-weight: 600; margin-top: 2px; }
 
-    /* Cuadrícula de Números */
-    .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; max-width: 500px; margin: 0 auto; }
-    @media (min-width: 480px) { .grid { grid-template-columns: repeat(10, 1fr); } }
+    /* Selector de Planillas en pestañas horizontales */
+    .sheet-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 3px;
+      margin: 6px 0;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid #bfdbfe;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .tab-btn.active {
+      background: #fbbf24;
+      color: #1e3a8a;
+      border-color: #fbbf24;
+    }
 
-    /* Fichas de Números Libres */
-    .card { background: #1e293b; border: 2px solid #334155; border-radius: 6px; padding: 12px 0; font-weight: 700; font-size: 1rem; user-select: none; position: relative; color: #f8fafc; }
+    /* Buscador compacto */
+    .search-box { margin: 2px 0 6px 0; display: flex; justify-content: center; width: 100%; }
+    .search-box input { 
+      width: 100%; 
+      max-width: 280px; 
+      padding: 6px 8px; 
+      font-size: 0.8rem; 
+      border-radius: 6px; 
+      border: 1px solid #bfdbfe; 
+      background: #ffffff; 
+      color: #1e3a8a; 
+      text-align: center; 
+      font-weight: bold; 
+    }
+
+    /* Cuadrícula de 10x10 */
+    .grid-container {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin: 4px 0;
+    }
+
+    .grid { 
+      display: grid; 
+      grid-template-columns: repeat(10, 1fr); 
+      gap: 3px; 
+      width: 100%; 
+      max-width: 420px;
+    }
+
+    /* Fichas de Números */
+    .card { 
+      background: #ffffff; 
+      border: 1px solid #bfdbfe; 
+      border-radius: 4px; 
+      aspect-ratio: 1 / 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800; 
+      font-size: 0.7rem; 
+      user-select: none; 
+      position: relative; 
+      color: #1e3a8a; 
+      box-shadow: 0 1px 2px rgba(0,0,0,0.1); 
+    }
 
     /* Estado: Ocupado (Rojo con X) */
-    .card.taken { background: #451215; border-color: #991b1b; color: #fca5a5; }
-    .card.taken::after { content: "X"; position: absolute; top: 1px; right: 4px; font-size: 0.7rem; color: #ef4444; font-weight: 900; }
+    .card.taken { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }
+    .card.taken::after { 
+      content: "X"; 
+      position: absolute; 
+      top: 1px; 
+      right: 2px; 
+      font-size: 0.55rem; 
+      color: #dc2626; 
+      font-weight: 900; 
+    }
 
     /* Resaltado de Búsqueda */
-    .card.highlight { outline: 3px solid #38bdf8; transform: scale(1.05); border-color: #38bdf8; }
+    .card.highlight { outline: 2px solid #fbbf24; transform: scale(1.08); border-color: #fbbf24; z-index: 10; }
+    
+    /* Botón Descargar Imagen */
+    .download-container { text-align: center; margin: 10px 0; }
+    .btn-download {
+      background: #22c55e;
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .btn-download:active { transform: scale(0.98); }
+
+    footer { text-align: center; font-size: 0.65rem; color: #bfdbfe; margin-top: 2px; }
   </style>
 
   <!-- Firebase SDK -->
@@ -57,32 +167,41 @@
     let allData = {};
 
     const grid = document.getElementById('grid');
-    const sheetSelect = document.getElementById('sheetSelect');
+    const tabsContainer = document.getElementById('sheetTabs');
     const searchInput = document.getElementById('searchInput');
+    const sheetLabel = document.getElementById('sheetLabel');
 
-    // Cargar selector de 10 planillas
+    // Cargar botones de pestañas (Planillas 1 a 10)
     for (let s = 0; s < 10; s++) {
-      const start = String(s * 100).padStart(3, '0');
-      const end = String((s * 100) + 99).padStart(3, '0');
-      const opt = document.createElement('option');
-      opt.value = s;
-      opt.innerText = `Planilla ${s + 1} (${start} al ${end})`;
-      sheetSelect.appendChild(opt);
+      const btn = document.createElement('button');
+      btn.className = `tab-btn ${s === 0 ? 'active' : ''}`;
+      btn.innerText = `P${s + 1}`;
+      btn.onclick = () => {
+        currentSheet = s;
+        updateTabsUI();
+        renderGrid();
+      };
+      tabsContainer.appendChild(btn);
     }
 
-    sheetSelect.addEventListener('change', (e) => {
-      currentSheet = parseInt(e.target.value);
-      renderGrid();
-    });
+    function updateTabsUI() {
+      const btns = tabsContainer.querySelectorAll('.tab-btn');
+      btns.forEach((btn, idx) => {
+        if (idx === currentSheet) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+      const start = String(currentSheet * 100).padStart(3, '0');
+      const end = String((currentSheet * 100) + 99).padStart(3, '0');
+      sheetLabel.innerText = `Planilla ${currentSheet + 1} (${start} al ${end})`;
+    }
 
     searchInput.addEventListener('input', (e) => {
       const query = e.target.value.trim();
       if (query.length === 3) {
         const num = parseInt(query);
         if (!isNaN(num) && num >= 0 && num <= 999) {
-          const targetSheet = Math.floor(num / 100);
-          sheetSelect.value = targetSheet;
-          currentSheet = targetSheet;
+          currentSheet = Math.floor(num / 100);
+          updateTabsUI();
           renderGrid(query);
         }
       } else {
@@ -118,23 +237,53 @@
         grid.appendChild(div);
       }
     }
+
+    // Función para descargar la imagen
+    window.downloadImage = () => {
+      const captureElement = document.getElementById('captureArea');
+      
+      html2canvas(captureElement, {
+        backgroundColor: '#1d4ed8',
+        scale: 2 // Mayor calidad de imagen
+      }).then(canvas => {
+        const image = canvas.toDataURL("image/png");
+        const link = document.createElement('a');
+        link.href = image;
+        link.download = `Planilla_${currentSheet + 1}_Rifa_Chiki.png`;
+        link.click();
+      });
+    };
   </script>
 </head>
 <body>
 
-  <h1>Rifa solidaria chiki</h1>
-  <p class="subtitle">Estado de números en tiempo real</p>
+  <!-- Selector de Planillas y Buscador (Fuera de la capturadora para que salga limpia) -->
+  <div class="sheet-tabs" id="sheetTabs"></div>
 
-  <div class="controls">
-    <div class="search-box">
-      <input type="text" id="searchInput" maxlength="3" placeholder="Buscar número (ej: 045)...">
-    </div>
-    <div class="sheet-selector">
-      <select id="sheetSelect"></select>
-    </div>
+  <div class="search-box">
+    <input type="text" id="searchInput" maxlength="3" placeholder="🔍 Buscar número (ej: 045)...">
   </div>
 
-  <div class="grid" id="grid"></div>
+  <!-- Área que se exporta como imagen PNG -->
+  <div id="captureArea">
+    <header>
+      <h1>Rifa solidaria chiki</h1>
+      <p class="subtitle" id="sheetLabel">Planilla 1 (000 al 099)</p>
+    </header>
+
+    <div class="grid-container">
+      <div class="grid" id="grid"></div>
+    </div>
+
+    <footer>
+      <p>Estado de números en tiempo real</p>
+    </footer>
+  </div>
+
+  <!-- Botón de descarga -->
+  <div class="download-container">
+    <button class="btn-download" onclick="downloadImage()">📸 Descargar Imagen de esta Planilla</button>
+  </div>
 
 </body>
 </html>
