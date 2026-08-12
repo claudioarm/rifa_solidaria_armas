@@ -14,7 +14,7 @@
     html, body {
       width: 100%;
       min-height: 100vh;
-      background: #2563eb; /* Azul Intermedio Neutro */
+      background: #0f172a; /* Azul Oscuro Elegante */
       color: #ffffff; 
       display: flex;
       flex-direction: column;
@@ -24,7 +24,7 @@
     
     /* Contenedor que se convertirá en imagen */
     #captureArea {
-      background: #2563eb; /* Mismo azul en la descarga de imagen */
+      background: #0f172a;
       padding: 10px;
       border-radius: 12px;
       display: flex;
@@ -35,15 +35,17 @@
 
     header { text-align: center; margin-bottom: 6px; }
     
+    /* Título en Dorado Oscuro Elegante */
     h1 { 
       font-size: 1.5rem; 
-      color: #fbbf24; /* Dorado Cálido */
-      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
-      font-weight: 800;
+      color: #d97706; /* Dorado Oscuro / Oro */
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.7);
+      font-weight: 900;
       line-height: 1.2;
+      letter-spacing: 0.5px;
     }
     
-    .subtitle { color: #dbeafe; font-size: 0.85rem; font-weight: 600; margin-top: 2px; }
+    .subtitle { color: #94a3b8; font-size: 0.85rem; font-weight: 600; margin-top: 2px; }
 
     /* Selector de Planillas en pestañas horizontales */
     .sheet-tabs {
@@ -54,9 +56,9 @@
       flex-wrap: wrap;
     }
     .tab-btn {
-      background: rgba(255, 255, 255, 0.2);
-      border: 1px solid #bfdbfe;
-      color: #ffffff;
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #cbd5e1;
       padding: 4px 8px;
       border-radius: 6px;
       font-size: 0.75rem;
@@ -64,9 +66,9 @@
       cursor: pointer;
     }
     .tab-btn.active {
-      background: #fbbf24;
-      color: #1e3a8a;
-      border-color: #fbbf24;
+      background: #d97706;
+      color: #ffffff;
+      border-color: #d97706;
     }
 
     /* Buscador compacto */
@@ -77,12 +79,13 @@
       padding: 6px 8px; 
       font-size: 0.85rem; 
       border-radius: 6px; 
-      border: 1px solid #bfdbfe; 
-      background: #ffffff; 
-      color: #1e3a8a; 
+      border: 1px solid #334155; 
+      background: #1e293b; 
+      color: #ffffff; 
       text-align: center; 
       font-weight: bold; 
     }
+    .search-box input::placeholder { color: #64748b; }
 
     /* Cuadrícula de 10x10 */
     .grid-container {
@@ -100,42 +103,41 @@
       max-width: 420px;
     }
 
-    /* Fichas de Números Libres */
+    /* Fichas del mismo color del fondo con números en blanco */
     .card { 
-      background: #ffffff; 
-      border: 1px solid #93c5fd; 
+      background: #0f172a; 
+      border: 1px solid #1e293b; 
       border-radius: 4px; 
       aspect-ratio: 1 / 1;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 800; 
-      font-size: 0.75rem; 
+      font-size: 0.8rem; 
       user-select: none; 
       position: relative; 
-      color: #1e3a8a; /* Azul Oscuro en los Números */
-      box-shadow: 0 1px 2px rgba(0,0,0,0.1); 
+      color: #ffffff; 
     }
 
     /* Estado: Ocupado (Rojo con X) */
-    .card.taken { background: #fee2e2; border-color: #fca5a5; color: #991b1b; }
+    .card.taken { background: #7f1d1d; border-color: #991b1b; color: #fca5a5; }
     .card.taken::after { 
       content: "X"; 
       position: absolute; 
       top: 1px; 
       right: 2px; 
       font-size: 0.55rem; 
-      color: #dc2626; 
+      color: #ef4444; 
       font-weight: 900; 
     }
 
     /* Resaltado de Búsqueda */
-    .card.highlight { outline: 2px solid #fbbf24; transform: scale(1.08); border-color: #fbbf24; z-index: 10; }
+    .card.highlight { outline: 2px solid #d97706; transform: scale(1.1); border-color: #d97706; z-index: 10; background: #1e293b; }
     
     /* Botón Descargar Imagen */
     .download-container { text-align: center; margin: 10px 0; }
     .btn-download {
-      background: #16a34a;
+      background: #0284c7;
       color: white;
       border: none;
       padding: 10px 16px;
@@ -143,11 +145,11 @@
       font-weight: bold;
       border-radius: 6px;
       cursor: pointer;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
     }
     .btn-download:active { transform: scale(0.98); }
 
-    footer { text-align: center; font-size: 0.7rem; color: #dbeafe; margin-top: 4px; font-weight: 600; }
+    footer { text-align: center; font-size: 0.7rem; color: #64748b; margin-top: 4px; font-weight: 600; }
   </style>
 
   <!-- Firebase SDK -->
@@ -243,7 +245,7 @@
       const captureElement = document.getElementById('captureArea');
       
       html2canvas(captureElement, {
-        backgroundColor: '#2563eb',
+        backgroundColor: '#0f172a',
         scale: 2
       }).then(canvas => {
         const image = canvas.toDataURL("image/png");
