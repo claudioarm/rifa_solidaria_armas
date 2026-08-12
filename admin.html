@@ -3,35 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rifa solidaria chiki</title>
+  <title>Panel Administrador - Rifa solidaria chiki</title>
   <style>
     * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
-    body { background: #f8fafc; margin: 0; padding: 12px; text-align: center; color: #0f172a; }
     
-    h1 { font-size: 1.4rem; margin: 5px 0 12px 0; color: #1e293b; }
+    body { background: #1d4ed8; margin: 0; padding: 12px; text-align: center; color: #ffffff; }
     
+    h1 { font-size: 1.8rem; margin: 5px 0 5px 0; color: #fbbf24; text-shadow: 1px 1px 3px rgba(0,0,0,0.4); font-weight: 800; }
+    p.subtitle { color: #e0e7ff; font-size: 0.9rem; margin-top: 0; margin-bottom: 12px; }
+
     /* Contadores y Estadísticas */
-    .stats { display: flex; justify-content: space-around; background: white; padding: 10px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); margin-bottom: 12px; }
+    .stats { display: flex; justify-content: space-around; background: #ffffff; padding: 10px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); margin-bottom: 12px; max-width: 500px; margin-left: auto; margin-right: auto; }
     .stat-box { display: flex; flex-direction: column; align-items: center; }
-    .stat-label { font-size: 0.7rem; color: #64748b; font-weight: 600; text-transform: uppercase; }
+    .stat-label { font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase; }
     .stat-val { font-size: 1.1rem; font-weight: 800; }
     .val-avail { color: #64748b; }
     .val-pending { color: #d97706; }
     .val-paid { color: #16a34a; }
     .val-money { color: #2563eb; }
 
-    /* Precio por número y Selector de Planilla */
-    .controls { display: flex; justify-content: center; align-items: center; gap: 12px; margin-bottom: 15px; flex-wrap: wrap; background: white; padding: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
-    .controls label { font-size: 0.85rem; font-weight: bold; }
-    .controls input { width: 95px; padding: 6px; font-size: 0.9rem; border-radius: 6px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold; }
-    .controls select { padding: 6px 10px; font-size: 0.9rem; border-radius: 6px; border: 1px solid #cbd5e1; background: white; font-weight: bold; }
+    /* Precio y Selector de Planilla */
+    .controls { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; max-width: 500px; margin-left: auto; margin-right: auto; }
+    .controls label { font-size: 0.85rem; font-weight: bold; color: #ffffff; }
+    .controls input { width: 95px; padding: 8px; font-size: 0.9rem; border-radius: 8px; border: 2px solid #bfdbfe; background: #ffffff; color: #1e3a8a; text-align: center; font-weight: bold; }
+    .controls select { padding: 8px 10px; font-size: 0.9rem; border-radius: 8px; border: 2px solid #bfdbfe; background: #ffffff; color: #1e3a8a; font-weight: bold; }
 
     /* Cuadrícula de Números */
     .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; max-width: 500px; margin: 0 auto; }
     @media (min-width: 480px) { .grid { grid-template-columns: repeat(10, 1fr); } }
 
     /* Fichas de Números */
-    .card { background: white; border: 2px solid #e2e8f0; border-radius: 6px; padding: 10px 0; font-weight: 700; font-size: 0.95rem; cursor: pointer; user-select: none; position: relative; transition: transform 0.1s; }
+    .card { background: #ffffff; border: 2px solid #bfdbfe; border-radius: 6px; padding: 10px 0; font-weight: 700; font-size: 0.95rem; cursor: pointer; user-select: none; position: relative; color: #1e3a8a; transition: transform 0.1s; }
     .card:active { transform: scale(0.95); }
 
     /* Estado: Pendiente (Sin comprobante) -> Naranja */
@@ -41,6 +43,25 @@
     /* Estado: Pagado (Con comprobante) -> Verde */
     .card.paid { background: #dcfce7; border-color: #22c55e; color: #15803d; }
     .card.paid::after { content: "X"; position: absolute; top: 1px; right: 3px; font-size: 0.65rem; color: #16a34a; font-weight: 900; }
+
+    /* Ventana Emergente (Modal) */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
+    .modal-overlay.hidden { display: none; }
+    .modal { background: #ffffff; border-radius: 12px; padding: 20px; width: 100%; max-width: 360px; color: #0f172a; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); animation: pop 0.2s ease-out; }
+    @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    
+    .modal h2 { margin-top: 0; color: #1e3a8a; font-size: 1.4rem; }
+    .modal label { display: block; text-align: left; font-size: 0.85rem; font-weight: bold; color: #64748b; margin-bottom: 4px; }
+    .modal input[type="text"] { width: 100%; padding: 10px; border-radius: 8px; border: 2px solid #cbd5e1; font-size: 1rem; margin-bottom: 12px; font-weight: 600; }
+    .modal p.question { font-weight: bold; font-size: 0.95rem; margin-bottom: 10px; color: #334155; }
+    
+    .modal-actions { display: flex; flex-direction: column; gap: 8px; }
+    .btn { padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 0.95rem; cursor: pointer; transition: 0.1s; }
+    .btn:active { transform: scale(0.98); }
+    .btn-green { background: #22c55e; color: white; }
+    .btn-orange { background: #f59e0b; color: white; }
+    .btn-red { background: #ef4444; color: white; }
+    .btn-gray { background: #94a3b8; color: white; margin-top: 5px; }
   </style>
 
   <!-- Firebase SDK -->
@@ -58,10 +79,16 @@
 
     let currentSheet = 0;
     let allData = {};
+    let selectedNum = null;
+    let currentInfo = null;
 
     const grid = document.getElementById('grid');
     const sheetSelect = document.getElementById('sheetSelect');
     const ticketPriceInput = document.getElementById('ticketPrice');
+    
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
 
     // Inicializar selector de 10 planillas
     for (let s = 0; s < 10; s++) {
@@ -78,40 +105,51 @@
       renderGrid();
     });
 
-    ticketPriceInput.addEventListener('input', () => {
-      updateGlobalStats();
-    });
+    ticketPriceInput.addEventListener('input', updateGlobalStats);
 
-    // Escuchar cambios en Firebase en tiempo real
+    // Escuchar cambios en Firebase
     onValue(numbersRef, (snapshot) => {
       allData = snapshot.val() || {};
       updateGlobalStats();
       renderGrid();
     });
 
-    // Renderizar los 100 números de la planilla seleccionada
     function renderGrid() {
       grid.innerHTML = '';
       const startNum = currentSheet * 100;
 
+      const regularNumbers = [];
+      const pendingNumbers = [];
+
       for (let i = startNum; i < startNum + 100; i++) {
         const numStr = String(i).padStart(3, '0');
-        const div = document.createElement('div');
-        div.className = 'card';
-        div.innerText = numStr;
-
         const info = allData[numStr];
-        if (info) {
-          if (info.status === 'paid') div.classList.add('paid');
-          if (info.status === 'pending') div.classList.add('pending');
-        }
 
-        div.onclick = () => handleNumberClick(numStr, info);
-        grid.appendChild(div);
+        if (info && info.status === 'pending') {
+          pendingNumbers.push({ numStr, info });
+        } else {
+          regularNumbers.push({ numStr, info });
+        }
       }
+
+      regularNumbers.forEach(item => grid.appendChild(createCardElement(item.numStr, item.info)));
+      pendingNumbers.forEach(item => grid.appendChild(createCardElement(item.numStr, item.info)));
     }
 
-    // Actualizar contadores totales y recaudación
+    function createCardElement(numStr, info) {
+      const div = document.createElement('div');
+      div.className = 'card';
+      div.innerText = numStr;
+
+      if (info) {
+        if (info.status === 'paid') div.classList.add('paid');
+        if (info.status === 'pending') div.classList.add('pending');
+      }
+
+      div.onclick = () => openModal(numStr, info);
+      return div;
+    }
+
     function updateGlobalStats() {
       let paidCount = 0;
       let pendingCount = 0;
@@ -130,40 +168,92 @@
       document.getElementById('totalMoney').innerText = '$' + totalMoney.toLocaleString('es-AR');
     }
 
-    // Lógica al hacer clic en un número
-    window.handleNumberClick = (numStr, currentInfo) => {
-      if (!currentInfo) {
-        // Número Disponible: Marcar nuevo comprador
-        const buyer = prompt(`Número ${numStr}\nIngresa el nombre del comprador:`);
-        if (!buyer) return;
+    // Abrir Modal
+    function openModal(numStr, info) {
+      selectedNum = numStr;
+      currentInfo = info;
+      modalOverlay.classList.remove('hidden');
 
-        const hasReceipt = confirm(`¿Tiene comprobante / ya pagó el número ${numStr}?\n\n- [Aceptar] = SÍ (Pagado / Verde)\n- [Cancelar] = NO (Pendiente / Naranja)`);
-        const status = hasReceipt ? 'paid' : 'pending';
+      if (!info) {
+        // Formulario para número nuevo (Comprador + Vendedor)
+        modalTitle.innerText = `Registrar Número ${numStr}`;
+        modalBody.innerHTML = `
+          <label for="buyerInput">Nombre del Comprador:</label>
+          <input type="text" id="buyerInput" placeholder="Ej: Juan Pérez" autofocus>
+          
+          <label for="sellerInput">Nombre del Vendedor:</label>
+          <input type="text" id="sellerInput" placeholder="Ej: María">
 
-        set(ref(db, `numbers/${numStr}`), { buyer, status });
+          <p class="question">¿Tiene comprobante de pago?</p>
+          <div class="modal-actions">
+            <button class="btn btn-green" onclick="saveNumber('paid')">SÍ (Pagado / Verde)</button>
+            <button class="btn btn-orange" onclick="saveNumber('pending')">NO (Pendiente / Naranja)</button>
+            <button class="btn btn-gray" onclick="closeModal()">Cancelar</button>
+          </div>
+        `;
+        setTimeout(() => document.getElementById('buyerInput').focus(), 100);
       } else {
-        // Número Ocupado: Editar estado o liberar
-        const currentStatusText = currentInfo.status === 'paid' ? 'PAGADO (Verde)' : 'PENDIENTE (Naranja)';
-        const option = prompt(
-          `Número ${numStr} - Comprador: ${currentInfo.buyer}\nEstado actual: ${currentStatusText}\n\n` +
-          `¿Qué deseas hacer?\n` +
-          `1 = Cambiar a PAGADO (Verde)\n` +
-          `2 = Cambiar a PENDIENTE (Naranja)\n` +
-          `3 = LIBERAR NÚMERO (Borrar y dejar disponible)`
-        );
+        // Opciones para número ya ocupado
+        const statusText = info.status === 'paid' ? 'PAGADO (Verde)' : 'PENDIENTE (Naranja)';
+        const sellerName = info.seller ? info.seller : 'No especificado';
 
-        if (option === '1') set(ref(db, `numbers/${numStr}/status`), 'paid');
-        else if (option === '2') set(ref(db, `numbers/${numStr}/status`), 'pending');
-        else if (option === '3') remove(ref(db, `numbers/${numStr}`));
+        modalTitle.innerText = `Número ${numStr}`;
+        modalBody.innerHTML = `
+          <p style="margin-top:0; margin-bottom: 6px;"><strong>Comprador:</strong> ${info.buyer}</p>
+          <p style="margin-top:0; margin-bottom: 6px;"><strong>Vendedor:</strong> ${sellerName}</p>
+          <p style="margin-top:0; margin-bottom: 12px;"><strong>Estado:</strong> ${statusText}</p>
+          <div class="modal-actions">
+            ${info.status !== 'paid' ? `<button class="btn btn-green" onclick="updateStatus('paid')">Cambiar a PAGADO (Verde)</button>` : ''}
+            ${info.status !== 'pending' ? `<button class="btn btn-orange" onclick="updateStatus('pending')">Cambiar a PENDIENTE (Naranja)</button>` : ''}
+            <button class="btn btn-red" onclick="releaseNumber()">LIBERAR NÚMERO (Borrar)</button>
+            <button class="btn btn-gray" onclick="closeModal()">Volver</button>
+          </div>
+        `;
       }
+    }
+
+    // Funciones de Acción
+    window.saveNumber = (status) => {
+      const buyer = document.getElementById('buyerInput').value.trim();
+      const seller = document.getElementById('sellerInput').value.trim();
+
+      if (!buyer) {
+        alert("Por favor escribe el nombre del comprador.");
+        return;
+      }
+
+      set(ref(db, `numbers/${selectedNum}`), { 
+        buyer: buyer, 
+        seller: seller || 'Sin especificar', 
+        status: status 
+      });
+
+      closeModal();
+    };
+
+    window.updateStatus = (status) => {
+      set(ref(db, `numbers/${selectedNum}/status`), status);
+      closeModal();
+    };
+
+    window.releaseNumber = () => {
+      if (confirm(`¿Seguro que deseas liberar el número ${selectedNum}?`)) {
+        remove(ref(db, `numbers/${selectedNum}`));
+        closeModal();
+      }
+    };
+
+    window.closeModal = () => {
+      modalOverlay.classList.add('hidden');
     };
   </script>
 </head>
 <body>
 
   <h1>Rifa solidaria chiki</h1>
+  <p class="subtitle">Panel Administrador Vendedores</p>
 
-  <!-- Estadísticas de los 1,000 números -->
+  <!-- Contadores -->
   <div class="stats">
     <div class="stat-box">
       <span class="stat-label">Libres</span>
@@ -183,11 +273,11 @@
     </div>
   </div>
 
-  <!-- Ajuste de Precio y Selector de Planillas -->
+  <!-- Ajustes -->
   <div class="controls">
     <div>
       <label for="ticketPrice">Precio ($):</label>
-      <input type="number" id="ticketPrice" value="20000" placeholder="20000">
+      <input type="number" id="ticketPrice" value="20000">
     </div>
     <div>
       <label for="sheetSelect">Planilla:</label>
@@ -197,6 +287,14 @@
 
   <!-- Cuadrícula -->
   <div class="grid" id="grid"></div>
+
+  <!-- Modal / Ventana Emergente -->
+  <div id="modalOverlay" class="modal-overlay hidden">
+    <div class="modal">
+      <h2 id="modalTitle">Número 000</h2>
+      <div id="modalBody"></div>
+    </div>
+  </div>
 
 </body>
 </html>
