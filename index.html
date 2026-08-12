@@ -14,7 +14,7 @@
     html, body {
       width: 100%;
       min-height: 100vh;
-      background: #1d4ed8; 
+      background: #2563eb; /* Azul Intermedio Neutro */
       color: #ffffff; 
       display: flex;
       flex-direction: column;
@@ -24,41 +24,41 @@
     
     /* Contenedor que se convertirá en imagen */
     #captureArea {
-      background: #1d4ed8;
-      padding: 8px;
-      border-radius: 8px;
+      background: #2563eb; /* Mismo azul en la descarga de imagen */
+      padding: 10px;
+      border-radius: 12px;
       display: flex;
       flex-direction: column;
       align-items: center;
       width: 100%;
     }
 
-    header { text-align: center; margin-bottom: 4px; }
+    header { text-align: center; margin-bottom: 6px; }
     
     h1 { 
-      font-size: 1.3rem; 
-      color: #fbbf24; 
-      text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
+      font-size: 1.5rem; 
+      color: #fbbf24; /* Dorado Cálido */
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
       font-weight: 800;
       line-height: 1.2;
     }
     
-    .subtitle { color: #e0e7ff; font-size: 0.8rem; font-weight: 600; margin-top: 2px; }
+    .subtitle { color: #dbeafe; font-size: 0.85rem; font-weight: 600; margin-top: 2px; }
 
     /* Selector de Planillas en pestañas horizontales */
     .sheet-tabs {
       display: flex;
       justify-content: center;
-      gap: 3px;
+      gap: 4px;
       margin: 6px 0;
       flex-wrap: wrap;
     }
     .tab-btn {
       background: rgba(255, 255, 255, 0.2);
       border: 1px solid #bfdbfe;
-      color: white;
+      color: #ffffff;
       padding: 4px 8px;
-      border-radius: 4px;
+      border-radius: 6px;
       font-size: 0.75rem;
       font-weight: bold;
       cursor: pointer;
@@ -75,7 +75,7 @@
       width: 100%; 
       max-width: 280px; 
       padding: 6px 8px; 
-      font-size: 0.8rem; 
+      font-size: 0.85rem; 
       border-radius: 6px; 
       border: 1px solid #bfdbfe; 
       background: #ffffff; 
@@ -100,20 +100,20 @@
       max-width: 420px;
     }
 
-    /* Fichas de Números */
+    /* Fichas de Números Libres */
     .card { 
       background: #ffffff; 
-      border: 1px solid #bfdbfe; 
+      border: 1px solid #93c5fd; 
       border-radius: 4px; 
       aspect-ratio: 1 / 1;
       display: flex;
       align-items: center;
       justify-content: center;
       font-weight: 800; 
-      font-size: 0.7rem; 
+      font-size: 0.75rem; 
       user-select: none; 
       position: relative; 
-      color: #1e3a8a; 
+      color: #1e3a8a; /* Azul Oscuro en los Números */
       box-shadow: 0 1px 2px rgba(0,0,0,0.1); 
     }
 
@@ -135,7 +135,7 @@
     /* Botón Descargar Imagen */
     .download-container { text-align: center; margin: 10px 0; }
     .btn-download {
-      background: #22c55e;
+      background: #16a34a;
       color: white;
       border: none;
       padding: 10px 16px;
@@ -147,7 +147,7 @@
     }
     .btn-download:active { transform: scale(0.98); }
 
-    footer { text-align: center; font-size: 0.65rem; color: #bfdbfe; margin-top: 2px; }
+    footer { text-align: center; font-size: 0.7rem; color: #dbeafe; margin-top: 4px; font-weight: 600; }
   </style>
 
   <!-- Firebase SDK -->
@@ -243,8 +243,8 @@
       const captureElement = document.getElementById('captureArea');
       
       html2canvas(captureElement, {
-        backgroundColor: '#1d4ed8',
-        scale: 2 // Mayor calidad de imagen
+        backgroundColor: '#2563eb',
+        scale: 2
       }).then(canvas => {
         const image = canvas.toDataURL("image/png");
         const link = document.createElement('a');
@@ -257,7 +257,7 @@
 </head>
 <body>
 
-  <!-- Selector de Planillas y Buscador (Fuera de la capturadora para que salga limpia) -->
+  <!-- Selector de Planillas y Buscador -->
   <div class="sheet-tabs" id="sheetTabs"></div>
 
   <div class="search-box">
