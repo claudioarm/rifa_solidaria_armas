@@ -78,6 +78,7 @@
     .btn:active { transform: scale(0.98); }
     .btn-green { background: #22c55e; color: white; }
     .btn-orange { background: #f59e0b; color: white; }
+    .btn-blue { background: #3b82f6; color: white; }
     .btn-red { background: #ef4444; color: white; }
     .btn-gray { background: #94a3b8; color: white; margin-top: 5px; }
   </style>
@@ -85,7 +86,7 @@
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getDatabase, ref, onValue, set, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
     const firebaseConfig = {
       databaseURL: "https://rifa-solidaria-c02ba-default-rtdb.firebaseio.com"
@@ -332,6 +333,7 @@
           <p style="margin-top:0; margin-bottom: 6px;"><strong>Vendedor:</strong> ${sellerName}</p>
           <p style="margin-top:0; margin-bottom: 12px;"><strong>Estado:</strong> ${statusText}</p>
           <div class="modal-actions">
+            <button class="btn btn-blue" onclick="editDetails('${info.buyer.replace(/'/g, "\\'")}', '${(info.seller || '').replace(/'/g, "\\'")}')">✏️ EDITAR DATOS (Nombres)</button>
             ${info.status !== 'paid' ? `<button class="btn btn-green" onclick="updateStatus('paid')">Cambiar a PAGADO (Verde)</button>` : ''}
             ${info.status !== 'pending' ? `<button class="btn btn-orange" onclick="updateStatus('pending')">Cambiar a PENDIENTE (Naranja)</button>` : ''}
             <button class="btn btn-red" onclick="releaseNumber()">LIBERAR NÚMERO (Borrar)</button>
@@ -340,6 +342,41 @@
         `;
       }
     }
+
+    // Modo Edición de Datos Existentes
+    window.editDetails = (currentBuyer, currentSeller) => {
+      modalTitle.innerText = `Editar Número ${selectedNum}`;
+      modalBody.innerHTML = `
+        <label for="buyerInput">Nombre del Comprador:</label>
+        <input type="text" id="buyerInput" value="${currentBuyer}">
+        
+        <label for="sellerInput">Nombre del Vendedor:</label>
+        <input type="text" id="sellerInput" value="${currentSeller}">
+
+        <div class="modal-actions">
+          <button class="btn btn-blue" onclick="saveEditedDetails()">💾 GUARDAR CAMBIOS</button>
+          <button class="btn btn-gray" onclick="closeModal()">Cancelar</button>
+        </div>
+      `;
+      setTimeout(() => document.getElementById('buyerInput').focus(), 100);
+    };
+
+    window.saveEditedDetails = () => {
+      const buyer = document.getElementById('buyerInput').value.trim();
+      const seller = document.getElementById('sellerInput').value.trim();
+
+      if (!buyer) {
+        alert("El nombre del comprador no puede estar vacío.");
+        return;
+      }
+
+      update(ref(db, `numbers/${selectedNum}`), { 
+        buyer: buyer, 
+        seller: seller || 'Sin especificar'
+      });
+
+      closeModal();
+    };
 
     // Funciones de Acción
     window.saveNumber = (status) => {
