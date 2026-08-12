@@ -7,7 +7,6 @@
   <style>
     * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
     
-    /* Fondo Blanco Original */
     body { background: #f8fafc; margin: 0; padding: 12px; text-align: center; color: #0f172a; }
     
     h1 { font-size: 1.5rem; margin: 5px 0 2px 0; color: #1e293b; }
@@ -23,11 +22,15 @@
     .val-paid { color: #16a34a; }
     .val-money { color: #2563eb; }
 
-    /* Precio y Selector de Planilla */
-    .controls { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; max-width: 500px; margin-left: auto; margin-right: auto; background: #ffffff; padding: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
-    .controls label { font-size: 0.85rem; font-weight: bold; color: #334155; }
-    .controls input { width: 95px; padding: 8px; font-size: 0.9rem; border-radius: 6px; border: 1px solid #cbd5e1; background: #ffffff; color: #0f172a; text-align: center; font-weight: bold; }
-    .controls select { padding: 8px 10px; font-size: 0.9rem; border-radius: 6px; border: 1px solid #cbd5e1; background: #ffffff; color: #0f172a; font-weight: bold; }
+    /* Buscador por Nombre y Ajustes */
+    .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; max-width: 500px; margin-left: auto; margin-right: auto; background: #ffffff; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
+    .search-row { display: flex; gap: 8px; }
+    .search-row input { flex: 1; padding: 10px; font-size: 0.95rem; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: bold; }
+    
+    .config-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .config-row label { font-size: 0.85rem; font-weight: bold; color: #334155; }
+    .config-row input { width: 95px; padding: 6px; font-size: 0.9rem; border-radius: 6px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold; }
+    .config-row select { padding: 6px 10px; font-size: 0.9rem; border-radius: 6px; border: 1px solid #cbd5e1; background: #ffffff; color: #0f172a; font-weight: bold; }
 
     /* Cuadrícula de Números */
     .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; max-width: 500px; margin: 0 auto; }
@@ -48,7 +51,7 @@
     /* Ventana Emergente (Modal) */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
     .modal-overlay.hidden { display: none; }
-    .modal { background: #ffffff; border-radius: 12px; padding: 20px; width: 100%; max-width: 360px; color: #0f172a; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: pop 0.2s ease-out; }
+    .modal { background: #ffffff; border-radius: 12px; padding: 20px; width: 100%; max-width: 380px; color: #0f172a; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: pop 0.2s ease-out; max-height: 90vh; overflow-y: auto; }
     @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     
     .modal h2 { margin-top: 0; color: #1e293b; font-size: 1.4rem; }
@@ -56,6 +59,15 @@
     .modal input[type="text"] { width: 100%; padding: 10px; border-radius: 8px; border: 2px solid #cbd5e1; font-size: 1rem; margin-bottom: 12px; font-weight: 600; }
     .modal p.question { font-weight: bold; font-size: 0.95rem; margin-bottom: 10px; color: #334155; }
     
+    /* Lista de búsqueda */
+    .search-results-list { text-align: left; margin: 10px 0; }
+    .search-item { background: #f1f5f9; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #cbd5e1; }
+    .search-item.paid-border { border-left-color: #22c55e; }
+    .search-item.pending-border { border-left-color: #f59e0b; }
+    .badge { display: inline-block; padding: 2px 6px; font-size: 0.75rem; border-radius: 4px; font-weight: bold; color: white; }
+    .badge-paid { background: #22c55e; }
+    .badge-pending { background: #f59e0b; }
+
     .modal-actions { display: flex; flex-direction: column; gap: 8px; }
     .btn { padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 0.95rem; cursor: pointer; transition: 0.1s; }
     .btn:active { transform: scale(0.98); }
@@ -81,17 +93,17 @@
     let currentSheet = 0;
     let allData = {};
     let selectedNum = null;
-    let currentInfo = null;
 
     const grid = document.getElementById('grid');
     const sheetSelect = document.getElementById('sheetSelect');
     const ticketPriceInput = document.getElementById('ticketPrice');
+    const searchNameInput = document.getElementById('searchNameInput');
     
     const modalOverlay = document.getElementById('modalOverlay');
     const modalTitle = document.getElementById('modalTitle');
     const modalBody = document.getElementById('modalBody');
 
-    // Inicializar selector de 10 planillas
+    // Cargar 10 planillas
     for (let s = 0; s < 10; s++) {
       const start = String(s * 100).padStart(3, '0');
       const end = String((s * 100) + 99).padStart(3, '0');
@@ -108,6 +120,14 @@
 
     ticketPriceInput.addEventListener('input', updateGlobalStats);
 
+    // Escuchar búsqueda por Nombre
+    searchNameInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      if (query.length >= 2) {
+        searchBuyer(query);
+      }
+    });
+
     // Escuchar cambios en Firebase
     onValue(numbersRef, (snapshot) => {
       allData = snapshot.val() || {};
@@ -115,26 +135,16 @@
       renderGrid();
     });
 
+    // Renderizar ordenado estrictamente del menor al mayor número
     function renderGrid() {
       grid.innerHTML = '';
       const startNum = currentSheet * 100;
 
-      const regularNumbers = [];
-      const pendingNumbers = [];
-
       for (let i = startNum; i < startNum + 100; i++) {
         const numStr = String(i).padStart(3, '0');
         const info = allData[numStr];
-
-        if (info && info.status === 'pending') {
-          pendingNumbers.push({ numStr, info });
-        } else {
-          regularNumbers.push({ numStr, info });
-        }
+        grid.appendChild(createCardElement(numStr, info));
       }
-
-      regularNumbers.forEach(item => grid.appendChild(createCardElement(item.numStr, item.info)));
-      pendingNumbers.forEach(item => grid.appendChild(createCardElement(item.numStr, item.info)));
     }
 
     function createCardElement(numStr, info) {
@@ -169,14 +179,61 @@
       document.getElementById('totalMoney').innerText = '$' + totalMoney.toLocaleString('es-AR');
     }
 
-    // Abrir Modal
+    // Buscar Comprador por Nombre
+    function searchBuyer(query) {
+      const results = [];
+      Object.entries(allData).forEach(([numStr, info]) => {
+        if (info.buyer && info.buyer.toLowerCase().includes(query)) {
+          results.push({ numStr, ...info });
+        }
+      });
+
+      modalOverlay.classList.remove('hidden');
+      modalTitle.innerText = `Resultados de la búsqueda`;
+
+      if (results.length === 0) {
+        modalBody.innerHTML = `
+          <p>No se encontraron compras con la palabra "<strong>${query}</strong>".</p>
+          <button class="btn btn-gray" onclick="closeModal()">Cerrar</button>
+        `;
+        return;
+      }
+
+      let html = `<p>Se encontraron <strong>${results.length}</strong> número(s):</p><div class="search-results-list">`;
+      
+      results.forEach(item => {
+        const borderClass = item.status === 'paid' ? 'paid-border' : 'pending-border';
+        const badgeClass = item.status === 'paid' ? 'badge-paid' : 'badge-pending';
+        const statusLabel = item.status === 'paid' ? 'PAGADO' : 'PENDIENTE';
+        const sellerName = item.seller ? item.seller : 'No especificado';
+
+        html += `
+          <div class="search-item ${borderClass}">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span style="font-size:1.1rem; font-weight:bold; color:#1e293b;">Número: ${item.numStr}</span>
+              <span class="badge ${badgeClass}">${statusLabel}</span>
+            </div>
+            <div style="font-size:0.85rem; color:#475569;">
+              <strong>Comprador:</strong> ${item.buyer}<br>
+              <strong>Vendedor:</strong> ${sellerName}
+            </div>
+          </div>
+        `;
+      });
+
+      html += `</div>
+        <button class="btn btn-gray" onclick="closeModal()">Cerrar</button>
+      `;
+
+      modalBody.innerHTML = html;
+    }
+
+    // Abrir Modal de Número Individual
     function openModal(numStr, info) {
       selectedNum = numStr;
-      currentInfo = info;
       modalOverlay.classList.remove('hidden');
 
       if (!info) {
-        // Formulario para número nuevo (Comprador + Vendedor)
         modalTitle.innerText = `Registrar Número ${numStr}`;
         modalBody.innerHTML = `
           <label for="buyerInput">Nombre del Comprador:</label>
@@ -194,7 +251,6 @@
         `;
         setTimeout(() => document.getElementById('buyerInput').focus(), 100);
       } else {
-        // Opciones para número ya ocupado
         const statusText = info.status === 'paid' ? 'PAGADO (Verde)' : 'PENDIENTE (Naranja)';
         const sellerName = info.seller ? info.seller : 'No especificado';
 
@@ -246,6 +302,7 @@
 
     window.closeModal = () => {
       modalOverlay.classList.add('hidden');
+      searchNameInput.value = ''; // Limpiar buscador
     };
   </script>
 </head>
@@ -274,15 +331,20 @@
     </div>
   </div>
 
-  <!-- Ajustes -->
+  <!-- Buscador y Ajustes -->
   <div class="controls">
-    <div>
-      <label for="ticketPrice">Precio ($):</label>
-      <input type="number" id="ticketPrice" value="20000">
+    <div class="search-row">
+      <input type="text" id="searchNameInput" placeholder="🔍 Buscar por nombre de comprador...">
     </div>
-    <div>
-      <label for="sheetSelect">Planilla:</label>
-      <select id="sheetSelect"></select>
+    <div class="config-row">
+      <div>
+        <label for="ticketPrice">Precio ($):</label>
+        <input type="number" id="ticketPrice" value="20000">
+      </div>
+      <div>
+        <label for="sheetSelect">Planilla:</label>
+        <select id="sheetSelect"></select>
+      </div>
     </div>
   </div>
 
