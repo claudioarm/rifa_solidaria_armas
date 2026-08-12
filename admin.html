@@ -7,13 +7,14 @@
   <style>
     * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
     
-body { background: #1d4ed8; margin: 0; padding: 12px; text-align: center; color: #ffffff; }
+    /* Fondo Blanco Original */
+    body { background: #f8fafc; margin: 0; padding: 12px; text-align: center; color: #0f172a; }
     
-    h1 { font-size: 1.8rem; margin: 5px 0 5px 0; color: #fbbf24; text-shadow: 1px 1px 3px rgba(0,0,0,0.4); font-weight: 800; }
-    p.subtitle { color: #e0e7ff; font-size: 0.9rem; margin-top: 0; margin-bottom: 12px; }
+    h1 { font-size: 1.5rem; margin: 5px 0 2px 0; color: #1e293b; }
+    p.subtitle { color: #64748b; font-size: 0.9rem; margin-top: 0; margin-bottom: 12px; }
 
     /* Contadores y Estadísticas */
-    .stats { display: flex; justify-content: space-around; background: #ffffff; padding: 10px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); margin-bottom: 12px; max-width: 500px; margin-left: auto; margin-right: auto; }
+    .stats { display: flex; justify-content: space-around; background: #ffffff; padding: 10px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); margin-bottom: 12px; max-width: 500px; margin-left: auto; margin-right: auto; }
     .stat-box { display: flex; flex-direction: column; align-items: center; }
     .stat-label { font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase; }
     .stat-val { font-size: 1.1rem; font-weight: 800; }
@@ -23,17 +24,17 @@ body { background: #1d4ed8; margin: 0; padding: 12px; text-align: center; color:
     .val-money { color: #2563eb; }
 
     /* Precio y Selector de Planilla */
-    .controls { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; max-width: 500px; margin-left: auto; margin-right: auto; }
-    .controls label { font-size: 0.85rem; font-weight: bold; color: #ffffff; }
-    .controls input { width: 95px; padding: 8px; font-size: 0.9rem; border-radius: 8px; border: 2px solid #bfdbfe; background: #ffffff; color: #1e3a8a; text-align: center; font-weight: bold; }
-    .controls select { padding: 8px 10px; font-size: 0.9rem; border-radius: 8px; border: 2px solid #bfdbfe; background: #ffffff; color: #1e3a8a; font-weight: bold; }
+    .controls { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; max-width: 500px; margin-left: auto; margin-right: auto; background: #ffffff; padding: 10px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
+    .controls label { font-size: 0.85rem; font-weight: bold; color: #334155; }
+    .controls input { width: 95px; padding: 8px; font-size: 0.9rem; border-radius: 6px; border: 1px solid #cbd5e1; background: #ffffff; color: #0f172a; text-align: center; font-weight: bold; }
+    .controls select { padding: 8px 10px; font-size: 0.9rem; border-radius: 6px; border: 1px solid #cbd5e1; background: #ffffff; color: #0f172a; font-weight: bold; }
 
     /* Cuadrícula de Números */
     .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; max-width: 500px; margin: 0 auto; }
     @media (min-width: 480px) { .grid { grid-template-columns: repeat(10, 1fr); } }
 
-    /* Fichas de Números */
-    .card { background: #ffffff; border: 2px solid #bfdbfe; border-radius: 6px; padding: 10px 0; font-weight: 700; font-size: 0.95rem; cursor: pointer; user-select: none; position: relative; color: #1e3a8a; transition: transform 0.1s; }
+    /* Fichas de Números Libres */
+    .card { background: #ffffff; border: 2px solid #e2e8f0; border-radius: 6px; padding: 10px 0; font-weight: 700; font-size: 0.95rem; cursor: pointer; user-select: none; position: relative; color: #0f172a; transition: transform 0.1s; }
     .card:active { transform: scale(0.95); }
 
     /* Estado: Pendiente (Sin comprobante) -> Naranja */
@@ -45,12 +46,12 @@ body { background: #1d4ed8; margin: 0; padding: 12px; text-align: center; color:
     .card.paid::after { content: "X"; position: absolute; top: 1px; right: 3px; font-size: 0.65rem; color: #16a34a; font-weight: 900; }
 
     /* Ventana Emergente (Modal) */
-    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
     .modal-overlay.hidden { display: none; }
-    .modal { background: #ffffff; border-radius: 12px; padding: 20px; width: 100%; max-width: 360px; color: #0f172a; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); animation: pop 0.2s ease-out; }
+    .modal { background: #ffffff; border-radius: 12px; padding: 20px; width: 100%; max-width: 360px; color: #0f172a; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: pop 0.2s ease-out; }
     @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     
-    .modal h2 { margin-top: 0; color: #1e3a8a; font-size: 1.4rem; }
+    .modal h2 { margin-top: 0; color: #1e293b; font-size: 1.4rem; }
     .modal label { display: block; text-align: left; font-size: 0.85rem; font-weight: bold; color: #64748b; margin-bottom: 4px; }
     .modal input[type="text"] { width: 100%; padding: 10px; border-radius: 8px; border: 2px solid #cbd5e1; font-size: 1rem; margin-bottom: 12px; font-weight: 600; }
     .modal p.question { font-weight: bold; font-size: 0.95rem; margin-bottom: 10px; color: #334155; }
