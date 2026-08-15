@@ -53,6 +53,11 @@
     .btn-pdf { width: 100%; background: #0284c7; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     .btn-pdf:active { transform: scale(0.98); }
 
+    /* Barra de sesión */
+    .session-bar { max-width: 500px; margin: 0 auto 10px auto; display: flex; justify-content: flex-end; padding: 0 4px; }
+    .session-bar span { font-size: 0.75rem; color: #64748b; }
+    .session-bar a { font-size: 0.75rem; color: #ef4444; font-weight: bold; text-decoration: none; margin-left: 8px; cursor: pointer; }
+
     /* Ventana Emergente (Modal) */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
     .modal-overlay.hidden { display: none; }
@@ -61,8 +66,9 @@
     
     .modal h2 { margin-top: 0; color: #1e293b; font-size: 1.4rem; }
     .modal label { display: block; text-align: left; font-size: 0.85rem; font-weight: bold; color: #64748b; margin-bottom: 4px; }
-    .modal input[type="text"] { width: 100%; padding: 10px; border-radius: 8px; border: 2px solid #cbd5e1; font-size: 1rem; margin-bottom: 12px; font-weight: 600; }
+    .modal input[type="text"], .modal input[type="email"], .modal input[type="password"] { width: 100%; padding: 10px; border-radius: 8px; border: 2px solid #cbd5e1; font-size: 1rem; margin-bottom: 12px; font-weight: 600; }
     .modal p.question { font-weight: bold; font-size: 0.95rem; margin-bottom: 10px; color: #334155; }
+    .modal p.error-msg { color: #ef4444; font-size: 0.85rem; font-weight: bold; margin-top: -6px; margin-bottom: 10px; text-align: left; }
     
     /* Lista de búsqueda */
     .search-results-list { text-align: left; margin: 10px 0; }
@@ -81,29 +87,36 @@
     .btn-blue { background: #3b82f6; color: white; }
     .btn-red { background: #ef4444; color: white; }
     .btn-gray { background: #94a3b8; color: white; margin-top: 5px; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
   </style>
 
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
     import { getDatabase, ref, onValue, set, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
     const firebaseConfig = {
-      databaseURL: "https://rifa-solidaria-c02ba-default-rtdb.firebaseio.com"
+      databaseURL: "https://rifa-solidaria-c02ba-default-rtdb.firebaseio.com",
+      apiKey: "AIzaSyCmp8w3S0KH4IaLGS6_rSRj9swq51yfblA"
     };
 
     const app = initializeApp(firebaseConfig);
     const db = getDatabase(app);
+    const auth = getAuth(app);
     const numbersRef = ref(db, 'numbers');
 
     let currentSheet = 0;
     let allData = {};
     let selectedNum = null;
+    let currentUser = null;
+    let pendingAction = null; // función a ejecutar una vez logueado
 
     const grid = document.getElementById('grid');
     const sheetSelect = document.getElementById('sheetSelect');
     const ticketPriceInput = document.getElementById('ticketPrice');
     const searchNameInput = document.getElementById('searchNameInput');
+    const sessionBar = document.getElementById('sessionBar');
     
     const modalOverlay = document.getElementById('modalOverlay');
     const modalTitle = document.getElementById('modalTitle');
@@ -141,6 +154,24 @@
       renderGrid();
     });
 
+    // Escuchar estado de sesión
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      renderSessionBar();
+    });
+
+    function renderSessionBar() {
+      if (currentUser) {
+        sessionBar.innerHTML = `<span>Sesión: ${escapeHtml(currentUser.email)}</span><a onclick="logout()">Cerrar sesión</a>`;
+      } else {
+        sessionBar.innerHTML = `<span>Sin sesión iniciada</span>`;
+      }
+    }
+
+    window.logout = () => {
+      signOut(auth);
+    };
+
     function renderGrid() {
       grid.innerHTML = '';
       const startNum = currentSheet * 100;
@@ -162,7 +193,7 @@
         if (info.status === 'pending') div.classList.add('pending');
       }
 
-      div.onclick = () => openModal(numStr, info);
+      div.onclick = () => requireLogin(() => openModal(numStr, info));
       return div;
     }
 
@@ -301,6 +332,68 @@
       modalBody.innerHTML = html;
     }
 
+    // Exige sesión iniciada antes de ejecutar una acción de escritura
+    function requireLogin(action) {
+      if (currentUser) {
+        action();
+        return;
+      }
+      pendingAction = action;
+      showLoginModal();
+    }
+
+    function showLoginModal(errorMsg) {
+      modalOverlay.classList.remove('hidden');
+      modalTitle.innerText = 'Iniciar sesión';
+      modalBody.innerHTML = `
+        <label for="loginEmail">Correo:</label>
+        <input type="email" id="loginEmail" placeholder="tu-correo@ejemplo.com" autofocus>
+
+        <label for="loginPassword">Contraseña:</label>
+        <input type="password" id="loginPassword" placeholder="Contraseña">
+
+        ${errorMsg ? `<p class="error-msg">${escapeHtml(errorMsg)}</p>` : ''}
+
+        <div class="modal-actions">
+          <button class="btn btn-blue" id="loginSubmitBtn">Ingresar</button>
+          <button class="btn btn-gray" onclick="closeModal()">Cancelar</button>
+        </div>
+      `;
+      document.getElementById('loginSubmitBtn').onclick = attemptLogin;
+      setTimeout(() => document.getElementById('loginEmail').focus(), 100);
+    }
+
+    function attemptLogin() {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const btn = document.getElementById('loginSubmitBtn');
+
+      if (!email || !password) {
+        showLoginModal('Completá correo y contraseña.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = 'Ingresando...';
+
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          const action = pendingAction;
+          pendingAction = null;
+          if (action) action();
+        })
+        .catch((err) => {
+          showLoginModal('Correo o contraseña incorrectos.');
+        });
+    }
+
+    // Escapa HTML para evitar XSS al insertar datos de compradores/vendedores
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str ?? '';
+      return div.innerHTML;
+    }
+
     // Abrir Modal de Número Individual
     function openModal(numStr, info) {
       selectedNum = numStr;
@@ -329,11 +422,11 @@
 
         modalTitle.innerText = `Número ${numStr}`;
         modalBody.innerHTML = `
-          <p style="margin-top:0; margin-bottom: 6px;"><strong>Comprador:</strong> ${info.buyer}</p>
-          <p style="margin-top:0; margin-bottom: 6px;"><strong>Vendedor:</strong> ${sellerName}</p>
+          <p style="margin-top:0; margin-bottom: 6px;"><strong>Comprador:</strong> ${escapeHtml(info.buyer)}</p>
+          <p style="margin-top:0; margin-bottom: 6px;"><strong>Vendedor:</strong> ${escapeHtml(sellerName)}</p>
           <p style="margin-top:0; margin-bottom: 12px;"><strong>Estado:</strong> ${statusText}</p>
           <div class="modal-actions">
-            <button class="btn btn-blue" onclick="editDetails('${info.buyer.replace(/'/g, "\\'")}', '${(info.seller || '').replace(/'/g, "\\'")}')">✏️ EDITAR DATOS (Nombres)</button>
+            <button class="btn btn-blue" onclick="editDetails()">✏️ EDITAR DATOS (Nombres)</button>
             ${info.status !== 'paid' ? `<button class="btn btn-green" onclick="updateStatus('paid')">Cambiar a PAGADO (Verde)</button>` : ''}
             ${info.status !== 'pending' ? `<button class="btn btn-orange" onclick="updateStatus('pending')">Cambiar a PENDIENTE (Naranja)</button>` : ''}
             <button class="btn btn-red" onclick="releaseNumber()">LIBERAR NÚMERO (Borrar)</button>
@@ -344,14 +437,15 @@
     }
 
     // Modo Edición de Datos Existentes
-    window.editDetails = (currentBuyer, currentSeller) => {
+    window.editDetails = () => {
+      const info = allData[selectedNum] || {};
       modalTitle.innerText = `Editar Número ${selectedNum}`;
       modalBody.innerHTML = `
         <label for="buyerInput">Nombre del Comprador:</label>
-        <input type="text" id="buyerInput" value="${currentBuyer}">
+        <input type="text" id="buyerInput" value="${escapeHtml(info.buyer)}">
         
         <label for="sellerInput">Nombre del Vendedor:</label>
-        <input type="text" id="sellerInput" value="${currentSeller}">
+        <input type="text" id="sellerInput" value="${escapeHtml(info.seller || '')}">
 
         <div class="modal-actions">
           <button class="btn btn-blue" onclick="saveEditedDetails()">💾 GUARDAR CAMBIOS</button>
@@ -373,7 +467,7 @@
       update(ref(db, `numbers/${selectedNum}`), { 
         buyer: buyer, 
         seller: seller || 'Sin especificar'
-      });
+      }).catch((err) => alert('No se pudo guardar: ' + err.message));
 
       closeModal();
     };
@@ -392,19 +486,21 @@
         buyer: buyer, 
         seller: seller || 'Sin especificar', 
         status: status 
-      });
+      }).catch((err) => alert('No se pudo guardar: ' + err.message));
 
       closeModal();
     };
 
     window.updateStatus = (status) => {
-      set(ref(db, `numbers/${selectedNum}/status`), status);
+      set(ref(db, `numbers/${selectedNum}/status`), status)
+        .catch((err) => alert('No se pudo actualizar: ' + err.message));
       closeModal();
     };
 
     window.releaseNumber = () => {
       if (confirm(`¿Seguro que deseas liberar el número ${selectedNum}?`)) {
-        remove(ref(db, `numbers/${selectedNum}`));
+        remove(ref(db, `numbers/${selectedNum}`))
+          .catch((err) => alert('No se pudo liberar: ' + err.message));
         closeModal();
       }
     };
@@ -412,6 +508,7 @@
     window.closeModal = () => {
       modalOverlay.classList.add('hidden');
       searchNameInput.value = '';
+      pendingAction = null;
     };
   </script>
 </head>
@@ -419,6 +516,8 @@
 
   <h1>Rifa solidaria chiki</h1>
   <p class="subtitle">Panel Administrador Vendedores</p>
+
+  <div class="session-bar" id="sessionBar"></div>
 
   <!-- Contadores -->
   <div class="stats">
