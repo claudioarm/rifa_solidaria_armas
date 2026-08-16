@@ -7,37 +7,45 @@
   <style>
     * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
     
-    body { background: #f8fafc; margin: 0; padding: 12px; text-align: center; color: #0f172a; padding-bottom: 40px; }
+    body { background: #0c4a6e; margin: 0; padding: 12px; text-align: center; color: #0f172a; padding-bottom: 40px; }
     
-    h1 { font-size: 1.5rem; margin: 5px 0 2px 0; color: #1e293b; }
+    h1 { font-size: 1.5rem; margin: 5px 0 2px 0; color: #f59e0b; }
     p.subtitle { color: #64748b; font-size: 0.9rem; margin-top: 0; margin-bottom: 12px; }
 
     /* Contadores y Estadísticas */
-    .stats { display: flex; justify-content: space-around; background: #ffffff; padding: 10px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.05); margin-bottom: 12px; max-width: 500px; margin-left: auto; margin-right: auto; }
+    .stats { display: flex; justify-content: space-around; background: #0c4a6e; border: 1px solid #1a6b96; padding: 10px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); margin-bottom: 12px; max-width: 500px; margin-left: auto; margin-right: auto; }
     .stat-box { display: flex; flex-direction: column; align-items: center; }
-    .stat-label { font-size: 0.65rem; color: #64748b; font-weight: 700; text-transform: uppercase; }
+    .stat-label { font-size: 0.65rem; color: #ffffff; font-weight: 700; text-transform: uppercase; }
     .stat-val { font-size: 1.1rem; font-weight: 800; }
-    .val-avail { color: #64748b; }
+    .val-avail { color: #ffffff; }
     .val-pending { color: #d97706; }
     .val-paid { color: #16a34a; }
     .val-money { color: #2563eb; }
 
     /* Buscador por Nombre y Ajustes */
-    .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; max-width: 500px; margin-left: auto; margin-right: auto; background: #ffffff; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.03); }
+    .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; max-width: 500px; margin-left: auto; margin-right: auto; background: #0c4a6e; border: 1px solid #1a6b96; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
     .search-row { display: flex; gap: 8px; }
     .search-row input { flex: 1; padding: 10px; font-size: 0.95rem; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: bold; }
     
     .config-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
-    .config-row label { font-size: 0.85rem; font-weight: bold; color: #334155; }
+    .config-row label { font-size: 0.85rem; font-weight: bold; color: #ffffff; }
     .config-row input { width: 95px; padding: 6px; font-size: 0.9rem; border-radius: 6px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold; }
     .config-row select { padding: 6px 10px; font-size: 0.9rem; border-radius: 6px; border: 1px solid #cbd5e1; background: #ffffff; color: #0f172a; font-weight: bold; }
+
+    /* Cuadraditos de Planilla */
+    .sheet-tabs-row label { display: block; text-align: left; font-size: 0.85rem; font-weight: bold; color: #ffffff; margin-bottom: 6px; }
+    .sheet-tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; max-width: 500px; margin: 0 auto; }
+    @media (min-width: 480px) { .sheet-tabs { grid-template-columns: repeat(10, 1fr); } }
+    .sheet-tab-btn { background: #075985; border: 2px solid #0369a1; border-radius: 6px; padding: 8px 0; font-weight: 700; font-size: 0.8rem; cursor: pointer; color: #ffffff; transition: transform 0.1s; }
+    .sheet-tab-btn:active { transform: scale(0.95); }
+    .sheet-tab-btn.active { background: #f59e0b; border-color: #f59e0b; color: #ffffff; }
 
     /* Cuadrícula de Números */
     .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; max-width: 500px; margin: 0 auto 20px auto; }
     @media (min-width: 480px) { .grid { grid-template-columns: repeat(10, 1fr); } }
 
     /* Fichas de Números Libres */
-    .card { background: #ffffff; border: 2px solid #e2e8f0; border-radius: 6px; padding: 10px 0; font-weight: 700; font-size: 0.95rem; cursor: pointer; user-select: none; position: relative; color: #0f172a; transition: transform 0.1s; }
+    .card { background: #075985; border: 2px solid #0369a1; border-radius: 6px; padding: 10px 0; font-weight: 700; font-size: 0.95rem; cursor: pointer; user-select: none; position: relative; color: #ffffff; transition: transform 0.1s; }
     .card:active { transform: scale(0.95); }
 
     /* Estado: Pendiente -> Naranja */
@@ -48,6 +56,16 @@
     .card.paid { background: #dcfce7; border-color: #22c55e; color: #15803d; }
     .card.paid::after { content: "X"; position: absolute; top: 1px; right: 3px; font-size: 0.65rem; color: #16a34a; font-weight: 900; }
 
+    /* Estado: Ocupado (vista pública, sin distinguir pendiente/pagado) -> Dorado oscuro */
+    .card.taken { background: #fef3c7; border-color: #f59e0b; color: #b45309; }
+    .card.taken::after { content: "X"; position: absolute; top: 1px; right: 3px; font-size: 0.65rem; color: #f59e0b; font-weight: 900; }
+
+    /* Elementos exclusivos de vendedores logueados: ocultos por defecto */
+    .vendor-only { display: none; }
+    body.is-vendor .vendor-only { display: flex; }
+    body.is-vendor .stats { justify-content: space-around; }
+    body:not(.is-vendor) .stats { justify-content: center; }
+
     /* Botón de PDF al Final */
     .pdf-btn-container { max-width: 500px; margin: 25px auto 10px auto; }
     .btn-pdf { width: 100%; background: #0284c7; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -55,19 +73,19 @@
 
     /* Barra de sesión */
     .session-bar { max-width: 500px; margin: 0 auto 10px auto; display: flex; justify-content: flex-end; padding: 0 4px; }
-    .session-bar span { font-size: 0.75rem; color: #64748b; }
-    .session-bar a { font-size: 0.75rem; color: #ef4444; font-weight: bold; text-decoration: none; margin-left: 8px; cursor: pointer; }
+    .session-bar span { font-size: 0.75rem; color: #bae6fd; }
+    .session-bar a { font-size: 0.75rem; color: #fca5a5; font-weight: bold; text-decoration: none; margin-left: 8px; cursor: pointer; }
 
     /* Ventana Emergente (Modal) */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
     .modal-overlay.hidden { display: none; }
-    .modal { background: #ffffff; border-radius: 12px; padding: 20px; width: 100%; max-width: 380px; color: #0f172a; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); animation: pop 0.2s ease-out; max-height: 90vh; overflow-y: auto; }
+    .modal { background: #0c4a6e; border: 1px solid #1a6b96; border-radius: 12px; padding: 20px; width: 100%; max-width: 380px; color: #ffffff; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.35); animation: pop 0.2s ease-out; max-height: 90vh; overflow-y: auto; }
     @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
     
-    .modal h2 { margin-top: 0; color: #1e293b; font-size: 1.4rem; }
-    .modal label { display: block; text-align: left; font-size: 0.85rem; font-weight: bold; color: #64748b; margin-bottom: 4px; }
+    .modal h2 { margin-top: 0; color: #ffffff; font-size: 1.4rem; }
+    .modal label { display: block; text-align: left; font-size: 0.85rem; font-weight: bold; color: #bae6fd; margin-bottom: 4px; }
     .modal input[type="text"], .modal input[type="email"], .modal input[type="password"] { width: 100%; padding: 10px; border-radius: 8px; border: 2px solid #cbd5e1; font-size: 1rem; margin-bottom: 12px; font-weight: 600; }
-    .modal p.question { font-weight: bold; font-size: 0.95rem; margin-bottom: 10px; color: #334155; }
+    .modal p.question { font-weight: bold; font-size: 0.95rem; margin-bottom: 10px; color: #ffffff; }
     .modal p.error-msg { color: #ef4444; font-size: 0.85rem; font-weight: bold; margin-top: -6px; margin-bottom: 10px; text-align: left; }
     
     /* Lista de búsqueda */
@@ -113,7 +131,7 @@
     let pendingAction = null; // función a ejecutar una vez logueado
 
     const grid = document.getElementById('grid');
-    const sheetSelect = document.getElementById('sheetSelect');
+    const sheetTabs = document.getElementById('sheetTabs');
     const ticketPriceInput = document.getElementById('ticketPrice');
     const searchNameInput = document.getElementById('searchNameInput');
     const sessionBar = document.getElementById('sessionBar');
@@ -122,20 +140,28 @@
     const modalTitle = document.getElementById('modalTitle');
     const modalBody = document.getElementById('modalBody');
 
-    // Cargar 10 planillas
+    // Cargar 10 cuadraditos de planilla (P000, P100, P200...)
     for (let s = 0; s < 10; s++) {
       const start = String(s * 100).padStart(3, '0');
-      const end = String((s * 100) + 99).padStart(3, '0');
-      const opt = document.createElement('option');
-      opt.value = s;
-      opt.innerText = `Planilla ${s + 1} (${start} al ${end})`;
-      sheetSelect.appendChild(opt);
+      const btn = document.createElement('button');
+      btn.className = 'sheet-tab-btn';
+      btn.type = 'button';
+      btn.innerText = `P${start}`;
+      btn.dataset.sheet = s;
+      if (s === 0) btn.classList.add('active');
+      btn.addEventListener('click', () => {
+        currentSheet = s;
+        renderGrid();
+        updateActiveSheetTab();
+      });
+      sheetTabs.appendChild(btn);
     }
 
-    sheetSelect.addEventListener('change', (e) => {
-      currentSheet = parseInt(e.target.value);
-      renderGrid();
-    });
+    function updateActiveSheetTab() {
+      sheetTabs.querySelectorAll('.sheet-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.sheet) === currentSheet);
+      });
+    }
 
     ticketPriceInput.addEventListener('input', updateGlobalStats);
 
@@ -157,7 +183,10 @@
     // Escuchar estado de sesión
     onAuthStateChanged(auth, (user) => {
       currentUser = user;
+      document.body.classList.toggle('is-vendor', !!currentUser);
       renderSessionBar();
+      updateGlobalStats();
+      renderGrid();
     });
 
     function renderSessionBar() {
@@ -189,8 +218,12 @@
       div.innerText = numStr;
 
       if (info) {
-        if (info.status === 'paid') div.classList.add('paid');
-        if (info.status === 'pending') div.classList.add('pending');
+        if (currentUser) {
+          if (info.status === 'paid') div.classList.add('paid');
+          if (info.status === 'pending') div.classList.add('pending');
+        } else {
+          div.classList.add('taken');
+        }
       }
 
       div.onclick = () => requireLogin(() => openModal(numStr, info));
@@ -514,8 +547,7 @@
 </head>
 <body>
 
-  <h1>Rifa solidaria chiki</h1>
-  <p class="subtitle">Panel Administrador Vendedores</p>
+  <h1>Gran rifa solidaria</h1>
 
   <div class="session-bar" id="sessionBar"></div>
 
@@ -525,15 +557,15 @@
       <span class="stat-label">Libres</span>
       <span id="availCount" class="stat-val val-avail">1000</span>
     </div>
-    <div class="stat-box">
+    <div class="stat-box vendor-only">
       <span class="stat-label">Pendiente</span>
       <span id="pendingCount" class="stat-val val-pending">0</span>
     </div>
-    <div class="stat-box">
+    <div class="stat-box vendor-only">
       <span class="stat-label">Pagados</span>
       <span id="paidCount" class="stat-val val-paid">0</span>
     </div>
-    <div class="stat-box">
+    <div class="stat-box vendor-only">
       <span class="stat-label">Recaudado</span>
       <span id="totalMoney" class="stat-val val-money">$0</span>
     </div>
@@ -541,26 +573,26 @@
 
   <!-- Buscador y Ajustes -->
   <div class="controls">
-    <div class="search-row">
+    <div class="search-row vendor-only">
       <input type="text" id="searchNameInput" placeholder="🔍 Buscar por nombre de comprador...">
     </div>
-    <div class="config-row">
+    <div class="config-row vendor-only">
       <div>
         <label for="ticketPrice">Precio ($):</label>
         <input type="number" id="ticketPrice" value="20000">
       </div>
-      <div>
-        <label for="sheetSelect">Planilla:</label>
-        <select id="sheetSelect"></select>
-      </div>
+    </div>
+    <div class="sheet-tabs-row">
+      <label>Planilla:</label>
+      <div class="sheet-tabs" id="sheetTabs"></div>
     </div>
   </div>
 
   <!-- Cuadrícula -->
   <div class="grid" id="grid"></div>
 
-  <!-- Botón Generar PDF al Pie -->
-  <div class="pdf-btn-container">
+  <!-- Botón Generar PDF al Pie (solo vendedores) -->
+  <div class="pdf-btn-container vendor-only">
     <button class="btn-pdf" onclick="generatePDF()">📄 Generar Reporte / Imprimir PDF</button>
   </div>
 
