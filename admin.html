@@ -253,7 +253,7 @@
       document.getElementById('totalMoney').innerText = '$' + totalMoney.toLocaleString('es-AR');
     }
 
-    // Descargar la planilla actual como imagen (PNG)
+// Descargar la planilla actual como imagen (PNG) con números ocupados en ROJO
     window.downloadSheetImage = async () => {
       const btn = document.getElementById('downloadImgBtn');
       const originalText = btn.innerText;
@@ -270,9 +270,6 @@
         <p style="color:#bae6fd; font-size:1.1rem; margin:0 0 20px 0;">Planilla ${currentSheet + 1} (${start} al ${end})</p>
       `;
 
-      // Construye la grilla propia (no clona la de pantalla) para que la imagen
-      // siempre muestre pagado/pendiente diferenciados, sin importar la sesión,
-      // y con números más grandes y legibles.
       const exportGrid = document.createElement('div');
       exportGrid.style.cssText = 'display:grid; grid-template-columns:repeat(10, 1fr); gap:8px; max-width:740px; margin:0 auto;';
 
@@ -283,15 +280,13 @@
         const cell = document.createElement('div');
         cell.style.cssText = 'border-radius:6px; padding:16px 0; font-weight:700; font-size:1.15rem;';
 
-        if (info && info.status === 'paid') {
-          cell.style.background = '#dcfce7';
-          cell.style.border = '2px solid #22c55e';
-          cell.style.color = '#15803d';
-        } else if (info && info.status === 'pending') {
-          cell.style.background = '#fef3c7';
-          cell.style.border = '2px solid #d97706';
-          cell.style.color = '#b45309';
+        // Si el número está ocupado (ya sea pagado o pendiente), se muestra en ROJO
+        if (info && (info.status === 'paid' || info.status === 'pending')) {
+          cell.style.background = '#fee2e2';
+          cell.style.border = '2px solid #ef4444';
+          cell.style.color = '#991b1b';
         } else {
+          // Número libre (Azul)
           cell.style.background = '#075985';
           cell.style.border = '2px solid #0369a1';
           cell.style.color = '#ffffff';
