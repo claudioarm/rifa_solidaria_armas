@@ -273,21 +273,23 @@
       const exportGrid = document.createElement('div');
       exportGrid.style.cssText = 'display:grid; grid-template-columns:repeat(10, 1fr); gap:8px; max-width:740px; margin:0 auto;';
 
-      const startNum = currentSheet * 100;
+const startNum = currentSheet * 100;
       for (let i = startNum; i < startNum + 100; i++) {
         const numStr = String(i).padStart(3, '0');
         const info = allData[numStr];
         const cell = document.createElement('div');
         cell.style.cssText = 'border-radius:6px; padding:16px 0; font-weight:800; font-size:1.15rem; position:relative;';
 
-        // Si está ocupado (pagado o pendiente): Fondo Rojo, texto Blanco y sombra
+        // Ocupado: Fondo rojo, texto blanco y sombra roja oscura en el texto y la X
         if (info && (info.status === 'paid' || info.status === 'pending')) {
           cell.style.background = '#dc2626';
           cell.style.border = '2px solid #b91c1c';
           cell.style.color = '#ffffff';
-          cell.style.textShadow = '1px 1px 2px #7f1d1d';
+          // Sombra roja oscura intensa alrededor del texto blanco
+          cell.style.textShadow = '0px 0px 4px #450a0a, 1px 1px 2px #7f1d1d';
           cell.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.2)';
-          cell.innerHTML = `${numStr}<span style="position:absolute; top:2px; right:4px; font-size:0.75rem; color:#ffffff; font-weight:900; opacity:0.9;">X</span>`;
+          
+          cell.innerHTML = `${numStr}<span style="position:absolute; top:2px; right:4px; font-size:0.75rem; color:#ffffff; font-weight:900; text-shadow: 0px 0px 3px #450a0a;">X</span>`;
         } else {
           // Libre (Azul)
           cell.style.background = '#075985';
