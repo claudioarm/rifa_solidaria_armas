@@ -264,18 +264,46 @@
       const end = String((currentSheet * 100) + 99).padStart(3, '0');
 
       const exportDiv = document.createElement('div');
-      exportDiv.style.cssText = 'position:fixed; left:-9999px; top:0; background:#0c4a6e; padding:24px; width:600px; font-family:system-ui,-apple-system,sans-serif; text-align:center;';
+      exportDiv.style.cssText = 'position:fixed; left:-9999px; top:0; background:#0c4a6e; padding:28px; width:780px; font-family:system-ui,-apple-system,sans-serif; text-align:center;';
       exportDiv.innerHTML = `
-        <h2 style="color:#d97706; font-size:1.8rem; margin:0 0 4px 0; font-weight:800;">Gran rifa solidaria</h2>
-        <p style="color:#bae6fd; font-size:1rem; margin:0 0 16px 0;">Planilla ${currentSheet + 1} (${start} al ${end})</p>
+        <h2 style="color:#d97706; font-size:2rem; margin:0 0 4px 0; font-weight:800;">Gran rifa solidaria</h2>
+        <p style="color:#bae6fd; font-size:1.1rem; margin:0 0 20px 0;">Planilla ${currentSheet + 1} (${start} al ${end})</p>
       `;
 
-      const gridClone = grid.cloneNode(true);
-      gridClone.style.margin = '0 auto';
-      exportDiv.appendChild(gridClone);
+      // Construye la grilla propia (no clona la de pantalla) para que la imagen
+      // siempre muestre pagado/pendiente diferenciados, sin importar la sesión,
+      // y con números más grandes y legibles.
+      const exportGrid = document.createElement('div');
+      exportGrid.style.cssText = 'display:grid; grid-template-columns:repeat(10, 1fr); gap:8px; max-width:740px; margin:0 auto;';
+
+      const startNum = currentSheet * 100;
+      for (let i = startNum; i < startNum + 100; i++) {
+        const numStr = String(i).padStart(3, '0');
+        const info = allData[numStr];
+        const cell = document.createElement('div');
+        cell.style.cssText = 'border-radius:6px; padding:16px 0; font-weight:700; font-size:1.15rem;';
+
+        if (info && info.status === 'paid') {
+          cell.style.background = '#dcfce7';
+          cell.style.border = '2px solid #22c55e';
+          cell.style.color = '#15803d';
+        } else if (info && info.status === 'pending') {
+          cell.style.background = '#fef3c7';
+          cell.style.border = '2px solid #d97706';
+          cell.style.color = '#b45309';
+        } else {
+          cell.style.background = '#075985';
+          cell.style.border = '2px solid #0369a1';
+          cell.style.color = '#ffffff';
+        }
+
+        cell.innerText = numStr;
+        exportGrid.appendChild(cell);
+      }
+      exportDiv.appendChild(exportGrid);
 
       const footer = document.createElement('p');
-      footer.style.cssText = 'color:#bae6fd; font-size:0.75rem; margin-top:16px; margin-bottom: 0;';
+      footer.style.cssText = 'color:#bae6fd; font-size:0.85rem; margin-top:20px; margin-bottom: 0;';
       footer.innerText = 'Estado de números al ' + new Date().toLocaleString('es-AR');
       exportDiv.appendChild(footer);
 
