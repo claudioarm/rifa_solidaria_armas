@@ -9,7 +9,7 @@
     
     body { background: #0c4a6e; margin: 0; padding: 12px; text-align: center; color: #0f172a; padding-bottom: 40px; }
     
-    h1 { font-size: 1.5rem; margin: 5px 0 2px 0; color: #f59e0b; }
+    h1 { font-size: 1.5rem; margin: 5px 0 2px 0; color: #d97706; }
     p.subtitle { color: #64748b; font-size: 0.9rem; margin-top: 0; margin-bottom: 12px; }
 
     /* Contadores y Estadísticas */
@@ -20,7 +20,7 @@
     .val-avail { color: #ffffff; }
     .val-pending { color: #d97706; }
     .val-paid { color: #16a34a; }
-    .val-money { color: #2563eb; }
+    .val-money { color: #ffffff; }
 
     /* Buscador por Nombre y Ajustes */
     .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; max-width: 500px; margin-left: auto; margin-right: auto; background: #0c4a6e; border: 1px solid #1a6b96; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
@@ -38,7 +38,7 @@
     @media (min-width: 480px) { .sheet-tabs { grid-template-columns: repeat(10, 1fr); } }
     .sheet-tab-btn { background: #075985; border: 2px solid #0369a1; border-radius: 6px; padding: 8px 0; font-weight: 700; font-size: 0.8rem; cursor: pointer; color: #ffffff; transition: transform 0.1s; }
     .sheet-tab-btn:active { transform: scale(0.95); }
-    .sheet-tab-btn.active { background: #f59e0b; border-color: #f59e0b; color: #ffffff; }
+    .sheet-tab-btn.active { background: #d97706; border-color: #d97706; color: #ffffff; }
 
     /* Cuadrícula de Números */
     .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; max-width: 500px; margin: 0 auto 20px auto; }
@@ -49,7 +49,7 @@
     .card:active { transform: scale(0.95); }
 
     /* Estado: Pendiente -> Naranja */
-    .card.pending { background: #fef3c7; border-color: #f59e0b; color: #b45309; }
+    .card.pending { background: #fef3c7; border-color: #d97706; color: #b45309; }
     .card.pending::after { content: "X"; position: absolute; top: 1px; right: 3px; font-size: 0.65rem; color: #d97706; font-weight: 900; }
 
     /* Estado: Pagado -> Verde */
@@ -57,8 +57,8 @@
     .card.paid::after { content: "X"; position: absolute; top: 1px; right: 3px; font-size: 0.65rem; color: #16a34a; font-weight: 900; }
 
     /* Estado: Ocupado (vista pública, sin distinguir pendiente/pagado) -> Dorado oscuro */
-    .card.taken { background: #fef3c7; border-color: #f59e0b; color: #b45309; }
-    .card.taken::after { content: "X"; position: absolute; top: 1px; right: 3px; font-size: 0.65rem; color: #f59e0b; font-weight: 900; }
+    .card.taken { background: #fef3c7; border-color: #d97706; color: #b45309; }
+    .card.taken::after { content: "X"; position: absolute; top: 1px; right: 3px; font-size: 0.65rem; color: #d97706; font-weight: 900; }
 
     /* Elementos exclusivos de vendedores logueados: ocultos por defecto */
     .vendor-only { display: none; }
@@ -69,6 +69,8 @@
     /* Botón de PDF al Final */
     .pdf-btn-container { max-width: 500px; margin: 25px auto 10px auto; }
     .btn-pdf { width: 100%; background: #0284c7; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .btn-pdf.btn-download-img { background: #d97706; }
+    .btn-pdf:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn-pdf:active { transform: scale(0.98); }
 
     /* Barra de sesión */
@@ -92,21 +94,24 @@
     .search-results-list { text-align: left; margin: 10px 0; }
     .search-item { background: #f1f5f9; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #cbd5e1; }
     .search-item.paid-border { border-left-color: #22c55e; }
-    .search-item.pending-border { border-left-color: #f59e0b; }
+    .search-item.pending-border { border-left-color: #d97706; }
     .badge { display: inline-block; padding: 2px 6px; font-size: 0.75rem; border-radius: 4px; font-weight: bold; color: white; }
     .badge-paid { background: #22c55e; }
-    .badge-pending { background: #f59e0b; }
+    .badge-pending { background: #d97706; }
 
     .modal-actions { display: flex; flex-direction: column; gap: 8px; }
     .btn { padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 0.95rem; cursor: pointer; transition: 0.1s; }
     .btn:active { transform: scale(0.98); }
     .btn-green { background: #22c55e; color: white; }
-    .btn-orange { background: #f59e0b; color: white; }
+    .btn-orange { background: #d97706; color: white; }
     .btn-blue { background: #3b82f6; color: white; }
     .btn-red { background: #ef4444; color: white; }
     .btn-gray { background: #94a3b8; color: white; margin-top: 5px; }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; }
   </style>
+
+  <!-- Librería para exportar la planilla como imagen -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <!-- Firebase SDK -->
   <script type="module">
@@ -247,6 +252,49 @@
       document.getElementById('availCount').innerText = 1000 - (paidCount + pendingCount);
       document.getElementById('totalMoney').innerText = '$' + totalMoney.toLocaleString('es-AR');
     }
+
+    // Descargar la planilla actual como imagen (PNG)
+    window.downloadSheetImage = async () => {
+      const btn = document.getElementById('downloadImgBtn');
+      const originalText = btn.innerText;
+      btn.disabled = true;
+      btn.innerText = 'Generando...';
+
+      const start = String(currentSheet * 100).padStart(3, '0');
+      const end = String((currentSheet * 100) + 99).padStart(3, '0');
+
+      const exportDiv = document.createElement('div');
+      exportDiv.style.cssText = 'position:fixed; left:-9999px; top:0; background:#0c4a6e; padding:24px; width:600px; font-family:system-ui,-apple-system,sans-serif; text-align:center;';
+      exportDiv.innerHTML = `
+        <h2 style="color:#d97706; font-size:1.8rem; margin:0 0 4px 0; font-weight:800;">Gran rifa solidaria</h2>
+        <p style="color:#bae6fd; font-size:1rem; margin:0 0 16px 0;">Planilla ${currentSheet + 1} (${start} al ${end})</p>
+      `;
+
+      const gridClone = grid.cloneNode(true);
+      gridClone.style.margin = '0 auto';
+      exportDiv.appendChild(gridClone);
+
+      const footer = document.createElement('p');
+      footer.style.cssText = 'color:#bae6fd; font-size:0.75rem; margin-top:16px; margin-bottom: 0;';
+      footer.innerText = 'Estado de números al ' + new Date().toLocaleString('es-AR');
+      exportDiv.appendChild(footer);
+
+      document.body.appendChild(exportDiv);
+
+      try {
+        const canvas = await html2canvas(exportDiv, { backgroundColor: '#0c4a6e', scale: 2 });
+        const link = document.createElement('a');
+        link.download = `rifa-planilla-${currentSheet + 1}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } catch (err) {
+        alert('No se pudo generar la imagen: ' + err.message);
+      }
+
+      document.body.removeChild(exportDiv);
+      btn.disabled = false;
+      btn.innerText = originalText;
+    };
 
     // Generar e Imprimir PDF
     window.generatePDF = () => {
@@ -590,6 +638,11 @@
 
   <!-- Cuadrícula -->
   <div class="grid" id="grid"></div>
+
+  <!-- Botón Descargar Imagen de la Planilla (público y vendedores) -->
+  <div class="pdf-btn-container">
+    <button class="btn-pdf btn-download-img" id="downloadImgBtn" onclick="downloadSheetImage()">🖼️ Descargar planilla</button>
+  </div>
 
   <!-- Botón Generar PDF al Pie (solo vendedores) -->
   <div class="pdf-btn-container vendor-only">
