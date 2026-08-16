@@ -253,7 +253,7 @@
       document.getElementById('totalMoney').innerText = '$' + totalMoney.toLocaleString('es-AR');
     }
 
-// Descargar la planilla actual como imagen (PNG) con números ocupados en ROJO
+// Descargar la planilla actual como imagen (PNG) con ocupados en ROJO, texto blanco y "X"
     window.downloadSheetImage = async () => {
       const btn = document.getElementById('downloadImgBtn');
       const originalText = btn.innerText;
@@ -278,21 +278,24 @@
         const numStr = String(i).padStart(3, '0');
         const info = allData[numStr];
         const cell = document.createElement('div');
-        cell.style.cssText = 'border-radius:6px; padding:16px 0; font-weight:700; font-size:1.15rem;';
+        cell.style.cssText = 'border-radius:6px; padding:16px 0; font-weight:800; font-size:1.15rem; position:relative;';
 
-        // Si el número está ocupado (ya sea pagado o pendiente), se muestra en ROJO
+        // Si está ocupado (pagado o pendiente): Fondo Rojo, texto Blanco y sombra
         if (info && (info.status === 'paid' || info.status === 'pending')) {
-          cell.style.background = '#fee2e2';
-          cell.style.border = '2px solid #ef4444';
-          cell.style.color = '#991b1b';
+          cell.style.background = '#dc2626';
+          cell.style.border = '2px solid #b91c1c';
+          cell.style.color = '#ffffff';
+          cell.style.textShadow = '1px 1px 2px #7f1d1d';
+          cell.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.2)';
+          cell.innerHTML = `${numStr}<span style="position:absolute; top:2px; right:4px; font-size:0.75rem; color:#ffffff; font-weight:900; opacity:0.9;">X</span>`;
         } else {
-          // Número libre (Azul)
+          // Libre (Azul)
           cell.style.background = '#075985';
           cell.style.border = '2px solid #0369a1';
           cell.style.color = '#ffffff';
+          cell.innerText = numStr;
         }
 
-        cell.innerText = numStr;
         exportGrid.appendChild(cell);
       }
       exportDiv.appendChild(exportGrid);
@@ -318,7 +321,6 @@
       btn.disabled = false;
       btn.innerText = originalText;
     };
-
     // Generar e Imprimir PDF
     window.generatePDF = () => {
       const printWindow = window.open('', '_blank');
