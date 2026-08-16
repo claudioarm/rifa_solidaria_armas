@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8">a
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Panel Administrador - Rifa solidaria chiki</title>
   <style>
@@ -289,16 +289,14 @@ const startNum = currentSheet * 100;
         const cell = document.createElement('div');
         cell.style.cssText = 'border-radius:6px; padding:16px 0; font-weight:800; font-size:1.15rem; position:relative;';
 
-        // Ocupado: Fondo rojo, texto blanco y sombra roja oscura en el texto y la X
+        // Ocupado: Fondo rojo apagado, texto y "X" en rojo oscuro
         if (info && (info.status === 'paid' || info.status === 'pending')) {
-          cell.style.background = '#dc2626';
-          cell.style.border = '2px solid #b91c1c';
-          cell.style.color = '#ffffff';
-          // Sombra roja oscura intensa alrededor del texto blanco
-          cell.style.textShadow = '0px 0px 4px #450a0a, 1px 1px 2px #7f1d1d';
+          cell.style.background = '#c47a7a';
+          cell.style.border = '2px solid #b06666';
+          cell.style.color = '#7f1d1d';
           cell.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.2)';
-          
-          cell.innerHTML = `${numStr}<span style="position:absolute; top:2px; right:4px; font-size:0.75rem; color:#ffffff; font-weight:900; text-shadow: 0px 0px 3px #450a0a;">X</span>`;
+
+          cell.innerHTML = `${numStr}<span style="position:absolute; top:2px; right:4px; font-size:0.75rem; color:#7f1d1d; font-weight:900;">X</span>`;
         } else {
           // Libre (Azul)
           cell.style.background = '#075985';
