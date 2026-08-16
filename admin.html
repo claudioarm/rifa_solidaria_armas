@@ -68,8 +68,7 @@
 
     /* Botón de PDF al Final */
     .pdf-btn-container { max-width: 500px; margin: 25px auto 10px auto; }
-    .btn-pdf { width: 100%; background: #0284c7; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    .btn-pdf.btn-download-img { background: #d97706; }
+    .btn-pdf { width: 100%; background: #d97706; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
     .btn-pdf:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn-pdf:active { transform: scale(0.98); }
 
@@ -265,9 +264,19 @@
 
       const exportDiv = document.createElement('div');
       exportDiv.style.cssText = 'position:fixed; left:-9999px; top:0; background:#0c4a6e; padding:28px; width:780px; font-family:system-ui,-apple-system,sans-serif; text-align:center;';
+
+      const price = parseFloat(ticketPriceInput.value) || 0;
+      const priceText = '$' + price.toLocaleString('es-AR');
+
       exportDiv.innerHTML = `
         <h2 style="color:#d97706; font-size:2rem; margin:0 0 4px 0; font-weight:800;">Gran rifa solidaria</h2>
-        <p style="color:#bae6fd; font-size:1.1rem; margin:0 0 20px 0;">Planilla ${currentSheet + 1} (${start} al ${end})</p>
+        <p style="color:#bae6fd; font-size:1.1rem; margin:0 0 16px 0;">Planilla ${currentSheet + 1} (${start} al ${end})</p>
+        <div style="background:#075985; border:1px solid #0369a1; border-radius:10px; padding:14px 20px; margin:0 0 20px 0; display:inline-block; text-align:left;">
+          <p style="color:#ffffff; font-size:1.15rem; font-weight:800; margin:0 0 8px 0; text-align:center;">Valor del número: ${priceText}</p>
+          <p style="color:#bae6fd; font-size:0.95rem; margin:0 0 3px 0;"><strong style="color:#ffffff;">Alias:</strong> chiki.cirugia.mp</p>
+          <p style="color:#bae6fd; font-size:0.95rem; margin:0 0 3px 0;"><strong style="color:#ffffff;">Titular:</strong> Silvia Susana Lescano</p>
+          <p style="color:#bae6fd; font-size:0.95rem; margin:0;"><strong style="color:#ffffff;">Cel:</strong> 3854767563</p>
+        </div>
       `;
 
       const exportGrid = document.createElement('div');
