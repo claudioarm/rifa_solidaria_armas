@@ -77,13 +77,13 @@
     .session-bar span { font-size: 0.75rem; color: #bae6fd; }
     .session-bar a { font-size: 0.75rem; color: #fca5a5; font-weight: bold; text-decoration: none; margin-left: 8px; cursor: pointer; }
 
-    /* Datos de pago */
-    .payment-info-box { background: #075985; border: 1px solid #0369a1; border-radius: 10px; padding: 16px 22px; margin: 0 auto 15px auto; max-width: 456px; text-align: left; }
-    .payment-info-box .payment-value { color: #ffffff; font-size: 1.15rem; font-weight: 800; margin: 0 0 10px 0; text-align: center; }
-    .payment-info-box .payment-line { color: #ffffff; font-size: 0.95rem; margin: 0 0 4px 0; }
-    .payment-info-box .payment-line-last { margin: 0 0 10px 0; }
-    .payment-info-box .payment-legend { color: #d97706; font-size: 0.85rem; font-weight: 800; margin: 0; text-align: center; }
-
+   /* Líneas 68-73 */
+   .payment-info-box { background: #075985; border: 1px solid #0369a1; border-radius: 10px; padding: 16px 22px; margin: 0 auto 15px auto; max-width: 456px; text-align: left; }
+   .payment-info-box .payment-value { color: #ffffff; font-size: 1.15rem; font-weight: 800; margin: 0 0 10px 0; text-align: center; }
+   .payment-info-box .payment-line { color: #ffffff; font-size: 0.95rem; margin: 0 0 4px 0; }
+   .payment-info-box .payment-line-last { margin: 0 0 10px 0; }
+   .payment-info-box .payment-legend { color: #d97706; font-size: 0.85rem; font-weight: 800; margin: 0; text-align: center; }
+   
     /* Ventana Emergente (Modal) */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
     .modal-overlay.hidden { display: none; }
@@ -279,16 +279,17 @@ window.downloadSheetImage = async () => {
   exportDiv.style.cssText = 'background:#0c4a6e; padding:28px; width:780px; font-family:system-ui,-apple-system,sans-serif; text-align:center;';
 
   // HTML con datos de pago hardcodeados con estilos inline para garantizar renderizado
+  
   exportDiv.innerHTML = `
     <h2 style="color:#d97706; font-size:2rem; margin:0 0 4px 0; font-weight:800;">Gran rifa solidaria</h2>
     <p style="color:#bae6fd; font-size:1.1rem; margin:0 0 16px 0;">Planilla ${currentSheet + 1} (${start} al ${end})</p>
     
     <div style="background:#075985; border:1px solid #0369a1; border-radius:10px; padding:16px 22px; margin:0 auto 20px auto; max-width:456px; text-align:left; color:#ffffff;">
-      <p style="color:#ffffff; font-size:1.15rem; font-weight:800; margin:0 0 10px 0; text-align:center;">Valor del número: $${price.toLocaleString('es-AR')}</p>
-      <p style="color:#ffffff; font-size:0.95rem; margin:0 0 4px 0;">Alias: chiki.cirugia.mp</p>
-      <p style="color:#ffffff; font-size:0.95rem; margin:0 0 4px 0;">Titular: Silvia Susana Lescano</p>
-      <p style="color:#ffffff; font-size:0.95rem; margin:0 0 10px 0;">Cel: 3854767563</p>
-      <p style="color:#d97706; font-size:0.85rem; font-weight:800; margin:0; text-align:center;">Se tomará en cuenta el comprobante</p>
+      <p style="color:#ffffff; font-size:1.25rem; font-weight:800; margin:0 0 10px 0; text-align:center;">Valor del número: $${price.toLocaleString('es-AR')}</p>
+      <p style="color:#ffffff; font-size:1.1rem; font-weight:700; margin:0 0 6px 0;">Alias: chiki.cirugia.mp</p>
+      <p style="color:#ffffff; font-size:1.1rem; font-weight:700; margin:0 0 6px 0;">Titular: Silvia Susana Lescano</p>
+      <p style="color:#ffffff; font-size:1.1rem; font-weight:700; margin:0 0 10px 0;">Cel: 3854767563</p>
+      <p style="color:#d97706; font-size:0.9rem; font-weight:800; margin:0; text-align:center;">Se tomará en cuenta el comprobante</p>
     </div>
   `;
 
