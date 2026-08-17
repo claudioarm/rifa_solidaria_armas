@@ -1,5 +1,708 @@
 <!DOCTYPE html>
+<html lang="es"><!DOCTYPE html>
 <html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Panel Administrador - Rifa solidaria chiki</title>
+  <style>
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    
+    body { background: #0c4a6e; margin: 0; padding: 12px; text-align: center; color: #0f172a; padding-bottom: 40px; }
+    
+    h1 { font-size: 1.5rem; margin: 5px 0 2px 0; color: #d97706; }
+    p.subtitle { color: #64748b; font-size: 0.9rem; margin-top: 0; margin-bottom: 12px; }
+
+    /* Contadores y Estadísticas */
+    .stats { display: flex; justify-content: space-around; background: #0c4a6e; border: 1px solid #1a6b96; padding: 10px; border-radius: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.15); margin-bottom: 12px; max-width: 500px; margin-left: auto; margin-right: auto; }
+    .stat-box { display: flex; flex-direction: column; align-items: center; }
+    .stat-label { font-size: 0.65rem; color: #ffffff; font-weight: 700; text-transform: uppercase; }
+    .stat-val { font-size: 1.1rem; font-weight: 800; }
+    .val-avail { color: #ffffff; }
+    .val-pending { color: #d97706; }
+    .val-paid { color: #16a34a; }
+    .val-money { color: #ffffff; }
+
+    /* Buscador por Nombre y Ajustes */
+    .controls { display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; max-width: 500px; margin-left: auto; margin-right: auto; background: #0c4a6e; border: 1px solid #1a6b96; padding: 12px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
+    .search-row { display: flex; gap: 8px; }
+    .search-row input { flex: 1; padding: 10px; font-size: 0.95rem; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: bold; }
+    
+    .config-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .config-row label { font-size: 0.85rem; font-weight: bold; color: #ffffff; }
+    .config-row input { width: 95px; padding: 6px; font-size: 0.9rem; border-radius: 6px; border: 1px solid #cbd5e1; text-align: center; font-weight: bold; }
+    .config-row select { padding: 6px 10px; font-size: 0.9rem; border-radius: 6px; border: 1px solid #cbd5e1; background: #ffffff; color: #0f172a; font-weight: bold; }
+
+    /* Cuadraditos de Planilla */
+    .sheet-tabs-row label { display: block; text-align: left; font-size: 0.85rem; font-weight: bold; color: #ffffff; margin-bottom: 6px; }
+    .sheet-tabs { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; max-width: 500px; margin: 0 auto; }
+    @media (min-width: 480px) { .sheet-tabs { grid-template-columns: repeat(10, 1fr); } }
+    .sheet-tab-btn { background: #075985; border: 2px solid #0369a1; border-radius: 6px; padding: 8px 0; font-weight: 700; font-size: 0.8rem; cursor: pointer; color: #ffffff; transition: transform 0.1s; }
+    .sheet-tab-btn:active { transform: scale(0.95); }
+    .sheet-tab-btn.active { background: #d97706; border-color: #d97706; color: #ffffff; }
+
+    /* Cuadrícula de Números */
+    .grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; max-width: 500px; margin: 0 auto 20px auto; }
+    @media (min-width: 480px) { .grid { grid-template-columns: repeat(10, 1fr); } }
+
+    /* Fichas de Números Libres */
+    .card { background: #075985; border: 2px solid #0369a1; border-radius: 6px; padding: 10px 0; font-weight: 700; font-size: 0.95rem; cursor: pointer; user-select: none; position: relative; color: #ffffff; transition: transform 0.1s; }
+    .card:active { transform: scale(0.95); }
+
+    /* Estado: Pendiente -> Naranja */
+    .card.pending { background: #fef3c7; border-color: #d97706; color: #b45309; }
+    .card.pending::after { content: "X"; position: absolute; top: 1px; right: 3px; font-size: 0.65rem; color: #d97706; font-weight: 900; }
+
+    /* Estado: Pagado -> Verde */
+    .card.paid { background: #dcfce7; border-color: #22c55e; color: #15803d; }
+    .card.paid::after { content: "X"; position: absolute; top: 1px; right: 3px; font-size: 0.65rem; color: #16a34a; font-weight: 900; }
+
+    /* Estado: Ocupado (vista pública, sin distinguir pendiente/pagado) -> Dorado oscuro */
+    .card.taken { background: #fef3c7; border-color: #d97706; color: #b45309; }
+    .card.taken::after { content: "X"; position: absolute; top: 1px; right: 3px; font-size: 0.65rem; color: #d97706; font-weight: 900; }
+
+    /* Elementos exclusivos de vendedores logueados: ocultos por defecto */
+    .vendor-only { display: none; }
+    body.is-vendor .vendor-only { display: flex; }
+    body.is-vendor .stats { justify-content: space-around; }
+    body:not(.is-vendor) .stats { justify-content: center; }
+
+    /* Botón de PDF al Final */
+    .pdf-btn-container { max-width: 500px; margin: 25px auto 10px auto; }
+    .btn-pdf { width: 100%; background: #d97706; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .btn-pdf:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-pdf:active { transform: scale(0.98); }
+
+    /* Barra de sesión */
+    .session-bar { max-width: 500px; margin: 0 auto 10px auto; display: flex; justify-content: flex-end; padding: 0 4px; }
+    .session-bar span { font-size: 0.75rem; color: #bae6fd; }
+    .session-bar a { font-size: 0.75rem; color: #fca5a5; font-weight: bold; text-decoration: none; margin-left: 8px; cursor: pointer; }
+
+    /* Ventana Emergente (Modal) */
+    .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
+    .modal-overlay.hidden { display: none; }
+    .modal { background: #0c4a6e; border: 1px solid #1a6b96; border-radius: 12px; padding: 20px; width: 100%; max-width: 380px; color: #ffffff; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.35); animation: pop 0.2s ease-out; max-height: 90vh; overflow-y: auto; }
+    @keyframes pop { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    
+    .modal h2 { margin-top: 0; color: #ffffff; font-size: 1.4rem; }
+    .modal label { display: block; text-align: left; font-size: 0.85rem; font-weight: bold; color: #bae6fd; margin-bottom: 4px; }
+    .modal input[type="text"], .modal input[type="email"], .modal input[type="password"] { width: 100%; padding: 10px; border-radius: 8px; border: 2px solid #cbd5e1; font-size: 1rem; margin-bottom: 12px; font-weight: 600; }
+    .modal p.question { font-weight: bold; font-size: 0.95rem; margin-bottom: 10px; color: #ffffff; }
+    .modal p.error-msg { color: #ef4444; font-size: 0.85rem; font-weight: bold; margin-top: -6px; margin-bottom: 10px; text-align: left; }
+    
+    /* Lista de búsqueda */
+    .search-results-list { text-align: left; margin: 10px 0; }
+    .search-item { background: #f1f5f9; padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 4px solid #cbd5e1; }
+    .search-item.paid-border { border-left-color: #22c55e; }
+    .search-item.pending-border { border-left-color: #d97706; }
+    .badge { display: inline-block; padding: 2px 6px; font-size: 0.75rem; border-radius: 4px; font-weight: bold; color: white; }
+    .badge-paid { background: #22c55e; }
+    .badge-pending { background: #d97706; }
+
+    .modal-actions { display: flex; flex-direction: column; gap: 8px; }
+    .btn { padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 0.95rem; cursor: pointer; transition: 0.1s; }
+    .btn:active { transform: scale(0.98); }
+    .btn-green { background: #22c55e; color: white; }
+    .btn-orange { background: #d97706; color: white; }
+    .btn-blue { background: #3b82f6; color: white; }
+    .btn-red { background: #ef4444; color: white; }
+    .btn-gray { background: #94a3b8; color: white; margin-top: 5px; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  </style>
+
+  <!-- Librería para exportar la planilla como imagen -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getDatabase, ref, onValue, set, update, remove } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      databaseURL: "https://rifa-solidaria-c02ba-default-rtdb.firebaseio.com",
+      apiKey: "AIzaSyCmp8w3S0KH4IaLGS6_rSRj9swq51yfblA"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const auth = getAuth(app);
+    const numbersRef = ref(db, 'numbers');
+
+    let currentSheet = 0;
+    let allData = {};
+    let selectedNum = null;
+    let currentUser = null;
+    let pendingAction = null; // función a ejecutar una vez logueado
+
+    const grid = document.getElementById('grid');
+    const sheetTabs = document.getElementById('sheetTabs');
+    const ticketPriceInput = document.getElementById('ticketPrice');
+    const searchNameInput = document.getElementById('searchNameInput');
+    const sessionBar = document.getElementById('sessionBar');
+    
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalBody = document.getElementById('modalBody');
+
+    // Cargar 10 cuadraditos de planilla (P000, P100, P200...)
+    for (let s = 0; s < 10; s++) {
+      const start = String(s * 100).padStart(3, '0');
+      const btn = document.createElement('button');
+      btn.className = 'sheet-tab-btn';
+      btn.type = 'button';
+      btn.innerText = `P${start}`;
+      btn.dataset.sheet = s;
+      if (s === 0) btn.classList.add('active');
+      btn.addEventListener('click', () => {
+        currentSheet = s;
+        renderGrid();
+        updateActiveSheetTab();
+      });
+      sheetTabs.appendChild(btn);
+    }
+
+    function updateActiveSheetTab() {
+      sheetTabs.querySelectorAll('.sheet-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', parseInt(btn.dataset.sheet) === currentSheet);
+      });
+    }
+
+    ticketPriceInput.addEventListener('input', updateGlobalStats);
+
+    // Escuchar búsqueda por Nombre
+    searchNameInput.addEventListener('input', (e) => {
+      const query = e.target.value.toLowerCase().trim();
+      if (query.length >= 2) {
+        searchBuyer(query);
+      }
+    });
+
+    // Escuchar cambios en Firebase
+    onValue(numbersRef, (snapshot) => {
+      allData = snapshot.val() || {};
+      updateGlobalStats();
+      renderGrid();
+    });
+
+    // Escuchar estado de sesión
+    onAuthStateChanged(auth, (user) => {
+      currentUser = user;
+      document.body.classList.toggle('is-vendor', !!currentUser);
+      renderSessionBar();
+      updateGlobalStats();
+      renderGrid();
+    });
+
+    function renderSessionBar() {
+      if (currentUser) {
+        sessionBar.innerHTML = `<span>Sesión: ${escapeHtml(currentUser.email)}</span><a onclick="logout()">Cerrar sesión</a>`;
+      } else {
+        sessionBar.innerHTML = `<span>Sin sesión iniciada</span>`;
+      }
+    }
+
+    window.logout = () => {
+      signOut(auth);
+    };
+
+    function renderGrid() {
+      grid.innerHTML = '';
+      const startNum = currentSheet * 100;
+
+      for (let i = startNum; i < startNum + 100; i++) {
+        const numStr = String(i).padStart(3, '0');
+        const info = allData[numStr];
+        grid.appendChild(createCardElement(numStr, info));
+      }
+    }
+
+    function createCardElement(numStr, info) {
+      const div = document.createElement('div');
+      div.className = 'card';
+      div.innerText = numStr;
+
+      if (info) {
+        if (currentUser) {
+          if (info.status === 'paid') div.classList.add('paid');
+          if (info.status === 'pending') div.classList.add('pending');
+        } else {
+          div.classList.add('taken');
+        }
+      }
+
+      div.onclick = () => requireLogin(() => openModal(numStr, info));
+      return div;
+    }
+
+    function updateGlobalStats() {
+      let paidCount = 0;
+      let pendingCount = 0;
+
+      Object.values(allData).forEach(item => {
+        if (item.status === 'paid') paidCount++;
+        if (item.status === 'pending') pendingCount++;
+      });
+
+      const price = parseFloat(ticketPriceInput.value) || 0;
+      const totalMoney = paidCount * price;
+
+      document.getElementById('paidCount').innerText = paidCount;
+      document.getElementById('pendingCount').innerText = pendingCount;
+      document.getElementById('availCount').innerText = 1000 - (paidCount + pendingCount);
+      document.getElementById('totalMoney').innerText = '$' + totalMoney.toLocaleString('es-AR');
+    }
+
+// Descargar la planilla actual como imagen (PNG) con ocupados en ROJO, texto blanco y "X"
+    window.downloadSheetImage = async () => {
+      const btn = document.getElementById('downloadImgBtn');
+      const originalText = btn.innerText;
+      btn.disabled = true;
+      btn.innerText = 'Generando...';
+
+      const start = String(currentSheet * 100).padStart(3, '0');
+      const end = String((currentSheet * 100) + 99).padStart(3, '0');
+
+      const hiddenWrapper = document.createElement('div');
+      hiddenWrapper.style.cssText = 'position:fixed; top:0; left:0; width:1px; height:1px; overflow:hidden; z-index:-1;';
+
+      const exportDiv = document.createElement('div');
+      exportDiv.style.cssText = 'background:#0c4a6e; padding:28px; width:780px; font-family:system-ui,-apple-system,sans-serif; text-align:center;';
+
+      const price = parseFloat(ticketPriceInput.value) || 0;
+      const priceText = '$' + price.toLocaleString('es-AR');
+
+      exportDiv.innerHTML = `
+        <h2 style="color:#d97706; font-size:2rem; margin:0 0 4px 0; font-weight:800;">Gran rifa solidaria</h2>
+        <p style="color:#bae6fd; font-size:1.1rem; margin:0 0 16px 0;">Planilla ${currentSheet + 1} (${start} al ${end})</p>
+        <div style="background:#075985; border:1px solid #0369a1; border-radius:10px; padding:16px 22px; margin:0 0 20px 0; display:inline-block; text-align:left;">
+          <p style="color:#ffffff; font-size:1.15rem; font-weight:800; margin:0 0 10px 0; text-align:center;">Valor del número: ${priceText}</p>
+          <p style="color:#ffffff; font-size:0.95rem; margin:0 0 4px 0;">Alias: chiki.cirugia.mp</p>
+          <p style="color:#ffffff; font-size:0.95rem; margin:0 0 4px 0;">Titular: Silvia Susana Lescano</p>
+          <p style="color:#ffffff; font-size:0.95rem; margin:0 0 10px 0;">Cel: 3854767563</p>
+          <p style="color:#d97706; font-size:0.85rem; font-weight:800; margin:0; text-align:center;">Se tomará en cuenta el comprobante</p>
+        </div>
+      `;
+
+      const exportGrid = document.createElement('div');
+      exportGrid.style.cssText = 'display:grid; grid-template-columns:repeat(10, 1fr); gap:8px; max-width:740px; margin:0 auto;';
+
+const startNum = currentSheet * 100;
+      for (let i = startNum; i < startNum + 100; i++) {
+        const numStr = String(i).padStart(3, '0');
+        const info = allData[numStr];
+        const cell = document.createElement('div');
+        cell.style.cssText = 'border-radius:6px; padding:16px 0; font-weight:800; font-size:1.15rem; position:relative;';
+
+        // Ocupado: Fondo rojo apagado, texto y "X" en rojo oscuro
+        if (info && (info.status === 'paid' || info.status === 'pending')) {
+          cell.style.background = '#c47a7a';
+          cell.style.border = '2px solid #b06666';
+          cell.style.color = '#7f1d1d';
+          cell.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.2)';
+
+          cell.innerHTML = `${numStr}<span style="position:absolute; top:2px; right:4px; font-size:0.75rem; color:#7f1d1d; font-weight:900;">X</span>`;
+        } else {
+          // Libre (Azul)
+          cell.style.background = '#075985';
+          cell.style.border = '2px solid #0369a1';
+          cell.style.color = '#ffffff';
+          cell.innerText = numStr;
+        }
+
+        exportGrid.appendChild(cell);
+      }
+      exportDiv.appendChild(exportGrid);
+
+      const footer = document.createElement('p');
+      footer.style.cssText = 'color:#bae6fd; font-size:0.85rem; margin-top:20px; margin-bottom: 0;';
+      footer.innerText = 'Estado de números al ' + new Date().toLocaleString('es-AR');
+      exportDiv.appendChild(footer);
+
+      hiddenWrapper.appendChild(exportDiv);
+      document.body.appendChild(hiddenWrapper);
+
+      // Espera a que el navegador termine de acomodar y pintar el contenido
+      // antes de sacarle la foto (evita capturas parciales o vacías).
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+
+      try {
+        const canvas = await html2canvas(exportDiv, { backgroundColor: '#0c4a6e', scale: 2 });
+        const link = document.createElement('a');
+        link.download = `rifa-planilla-${currentSheet + 1}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } catch (err) {
+        alert('No se pudo generar la imagen: ' + err.message);
+      }
+
+      document.body.removeChild(hiddenWrapper);
+      btn.disabled = false;
+      btn.innerText = originalText;
+    };
+    // Generar e Imprimir PDF
+    window.generatePDF = () => {
+      const printWindow = window.open('', '_blank');
+      
+      const entries = Object.entries(allData)
+        .map(([numStr, info]) => ({ numStr, ...info }))
+        .sort((a, b) => a.buyer.localeCompare(b.buyer));
+
+      let rowsHtml = '';
+      entries.forEach(item => {
+        const statusText = item.status === 'paid' ? '<b style="color:green;">PAGADO</b>' : '<b style="color:orange;">PENDIENTE</b>';
+        const sellerName = item.seller || 'Sin especificar';
+        
+        rowsHtml += `
+          <tr>
+            <td style="padding: 8px; border: 1px solid #ddd;">${item.buyer}</td>
+            <td style="padding: 8px; border: 1px solid #ddd;">${sellerName}</td>
+            <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">${statusText}</td>
+            <td style="padding: 8px; border: 1px solid #ddd; text-align: center; font-weight: bold; font-size: 1.1em;">${item.numStr}</td>
+          </tr>
+        `;
+      });
+
+      const fullContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Reporte de Ventas - Rifa solidaria chiki</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; color: #333; }
+            h1 { text-align: center; color: #1e293b; margin-bottom: 5px; }
+            p.sub { text-align: center; color: #666; margin-top: 0; }
+            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+            th { background-color: #f1f5f9; padding: 10px; border: 1px solid #ddd; text-align: left; }
+            th.center, td.center { text-align: center; }
+            @media print {
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="no-print" style="margin-bottom: 20px; text-align: center;">
+            <button onclick="window.print()" style="padding: 10px 20px; font-size: 16px; background: #22c55e; color: white; border: none; border-radius: 5px; cursor: pointer;">🖨️ Imprimir / Guardar como PDF</button>
+          </div>
+          <h1>Rifa solidaria chiki</h1>
+          <p class="sub">Listado General de Compradores y Vendedores</p>
+          
+          <table>
+            <thead>
+              <tr>
+                <th>Comprador</th>
+                <th>Vendedor</th>
+                <th class="center">Estado</th>
+                <th class="center">Número Anotado</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml || '<tr><td colspan="4" style="text-align:center; padding: 15px;">No hay números vendidos aún.</td></tr>'}
+            </tbody>
+          </table>
+        </body>
+        </html>
+      `;
+
+      printWindow.document.write(fullContent);
+      printWindow.document.close();
+    };
+
+    // Buscar Comprador por Nombre
+    function searchBuyer(query) {
+      const results = [];
+      Object.entries(allData).forEach(([numStr, info]) => {
+        if (info.buyer && info.buyer.toLowerCase().includes(query)) {
+          results.push({ numStr, ...info });
+        }
+      });
+
+      modalOverlay.classList.remove('hidden');
+      modalTitle.innerText = `Resultados de la búsqueda`;
+
+      if (results.length === 0) {
+        modalBody.innerHTML = `
+          <p>No se encontraron compras con "<strong>${query}</strong>".</p>
+          <button class="btn btn-gray" onclick="closeModal()">Cerrar</button>
+        `;
+        return;
+      }
+
+      let html = `<p>Se encontraron <strong>${results.length}</strong> número(s):</p><div class="search-results-list">`;
+      
+      results.forEach(item => {
+        const borderClass = item.status === 'paid' ? 'paid-border' : 'pending-border';
+        const badgeClass = item.status === 'paid' ? 'badge-paid' : 'badge-pending';
+        const statusLabel = item.status === 'paid' ? 'PAGADO' : 'PENDIENTE';
+        const sellerName = item.seller ? item.seller : 'No especificado';
+
+        html += `
+          <div class="search-item ${borderClass}">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+              <span style="font-size:1.1rem; font-weight:bold; color:#1e293b;">Número: ${item.numStr}</span>
+              <span class="badge ${badgeClass}">${statusLabel}</span>
+            </div>
+            <div style="font-size:0.85rem; color:#475569;">
+              <strong>Comprador:</strong> ${item.buyer}<br>
+              <strong>Vendedor:</strong> ${sellerName}
+            </div>
+          </div>
+        `;
+      });
+
+      html += `</div>
+        <button class="btn btn-gray" onclick="closeModal()">Cerrar</button>
+      `;
+
+      modalBody.innerHTML = html;
+    }
+
+    // Exige sesión iniciada antes de ejecutar una acción de escritura
+    function requireLogin(action) {
+      if (currentUser) {
+        action();
+        return;
+      }
+      pendingAction = action;
+      showLoginModal();
+    }
+
+    function showLoginModal(errorMsg) {
+      modalOverlay.classList.remove('hidden');
+      modalTitle.innerText = 'Iniciar sesión';
+      modalBody.innerHTML = `
+        <label for="loginEmail">Correo:</label>
+        <input type="email" id="loginEmail" placeholder="tu-correo@ejemplo.com" autofocus>
+
+        <label for="loginPassword">Contraseña:</label>
+        <input type="password" id="loginPassword" placeholder="Contraseña">
+
+        ${errorMsg ? `<p class="error-msg">${escapeHtml(errorMsg)}</p>` : ''}
+
+        <div class="modal-actions">
+          <button class="btn btn-blue" id="loginSubmitBtn">Ingresar</button>
+          <button class="btn btn-gray" onclick="closeModal()">Cancelar</button>
+        </div>
+      `;
+      document.getElementById('loginSubmitBtn').onclick = attemptLogin;
+      setTimeout(() => document.getElementById('loginEmail').focus(), 100);
+    }
+
+    function attemptLogin() {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const btn = document.getElementById('loginSubmitBtn');
+
+      if (!email || !password) {
+        showLoginModal('Completá correo y contraseña.');
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerText = 'Ingresando...';
+
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          const action = pendingAction;
+          pendingAction = null;
+          if (action) action();
+        })
+        .catch((err) => {
+          showLoginModal('Correo o contraseña incorrectos.');
+        });
+    }
+
+    // Escapa HTML para evitar XSS al insertar datos de compradores/vendedores
+    function escapeHtml(str) {
+      const div = document.createElement('div');
+      div.textContent = str ?? '';
+      return div.innerHTML;
+    }
+
+    // Abrir Modal de Número Individual
+    function openModal(numStr, info) {
+      selectedNum = numStr;
+      modalOverlay.classList.remove('hidden');
+
+      if (!info) {
+        modalTitle.innerText = `Registrar Número ${numStr}`;
+        modalBody.innerHTML = `
+          <label for="buyerInput">Nombre del Comprador:</label>
+          <input type="text" id="buyerInput" placeholder="Ej: Juan Pérez" autofocus>
+          
+          <label for="sellerInput">Nombre del Vendedor:</label>
+          <input type="text" id="sellerInput" placeholder="Ej: María">
+
+          <p class="question">¿Tiene comprobante de pago?</p>
+          <div class="modal-actions">
+            <button class="btn btn-green" onclick="saveNumber('paid')">SÍ (Pagado / Verde)</button>
+            <button class="btn btn-orange" onclick="saveNumber('pending')">NO (Pendiente / Naranja)</button>
+            <button class="btn btn-gray" onclick="closeModal()">Cancelar</button>
+          </div>
+        `;
+        setTimeout(() => document.getElementById('buyerInput').focus(), 100);
+      } else {
+        const statusText = info.status === 'paid' ? 'PAGADO (Verde)' : 'PENDIENTE (Naranja)';
+        const sellerName = info.seller ? info.seller : 'No especificado';
+
+        modalTitle.innerText = `Número ${numStr}`;
+        modalBody.innerHTML = `
+          <p style="margin-top:0; margin-bottom: 6px;"><strong>Comprador:</strong> ${escapeHtml(info.buyer)}</p>
+          <p style="margin-top:0; margin-bottom: 6px;"><strong>Vendedor:</strong> ${escapeHtml(sellerName)}</p>
+          <p style="margin-top:0; margin-bottom: 12px;"><strong>Estado:</strong> ${statusText}</p>
+          <div class="modal-actions">
+            <button class="btn btn-blue" onclick="editDetails()">✏️ EDITAR DATOS (Nombres)</button>
+            ${info.status !== 'paid' ? `<button class="btn btn-green" onclick="updateStatus('paid')">Cambiar a PAGADO (Verde)</button>` : ''}
+            ${info.status !== 'pending' ? `<button class="btn btn-orange" onclick="updateStatus('pending')">Cambiar a PENDIENTE (Naranja)</button>` : ''}
+            <button class="btn btn-red" onclick="releaseNumber()">LIBERAR NÚMERO (Borrar)</button>
+            <button class="btn btn-gray" onclick="closeModal()">Volver</button>
+          </div>
+        `;
+      }
+    }
+
+    // Modo Edición de Datos Existentes
+    window.editDetails = () => {
+      const info = allData[selectedNum] || {};
+      modalTitle.innerText = `Editar Número ${selectedNum}`;
+      modalBody.innerHTML = `
+        <label for="buyerInput">Nombre del Comprador:</label>
+        <input type="text" id="buyerInput" value="${escapeHtml(info.buyer)}">
+        
+        <label for="sellerInput">Nombre del Vendedor:</label>
+        <input type="text" id="sellerInput" value="${escapeHtml(info.seller || '')}">
+
+        <div class="modal-actions">
+          <button class="btn btn-blue" onclick="saveEditedDetails()">💾 GUARDAR CAMBIOS</button>
+          <button class="btn btn-gray" onclick="closeModal()">Cancelar</button>
+        </div>
+      `;
+      setTimeout(() => document.getElementById('buyerInput').focus(), 100);
+    };
+
+    window.saveEditedDetails = () => {
+      const buyer = document.getElementById('buyerInput').value.trim();
+      const seller = document.getElementById('sellerInput').value.trim();
+
+      if (!buyer) {
+        alert("El nombre del comprador no puede estar vacío.");
+        return;
+      }
+
+      update(ref(db, `numbers/${selectedNum}`), { 
+        buyer: buyer, 
+        seller: seller || 'Sin especificar'
+      }).catch((err) => alert('No se pudo guardar: ' + err.message));
+
+      closeModal();
+    };
+
+    // Funciones de Acción
+    window.saveNumber = (status) => {
+      const buyer = document.getElementById('buyerInput').value.trim();
+      const seller = document.getElementById('sellerInput').value.trim();
+
+      if (!buyer) {
+        alert("Por favor escribe el nombre del comprador.");
+        return;
+      }
+
+      set(ref(db, `numbers/${selectedNum}`), { 
+        buyer: buyer, 
+        seller: seller || 'Sin especificar', 
+        status: status 
+      }).catch((err) => alert('No se pudo guardar: ' + err.message));
+
+      closeModal();
+    };
+
+    window.updateStatus = (status) => {
+      set(ref(db, `numbers/${selectedNum}/status`), status)
+        .catch((err) => alert('No se pudo actualizar: ' + err.message));
+      closeModal();
+    };
+
+    window.releaseNumber = () => {
+      if (confirm(`¿Seguro que deseas liberar el número ${selectedNum}?`)) {
+        remove(ref(db, `numbers/${selectedNum}`))
+          .catch((err) => alert('No se pudo liberar: ' + err.message));
+        closeModal();
+      }
+    };
+
+    window.closeModal = () => {
+      modalOverlay.classList.add('hidden');
+      searchNameInput.value = '';
+      pendingAction = null;
+    };
+  </script>
+</head>
+<body>
+
+  <h1>Gran rifa solidaria</h1>
+
+  <div class="session-bar" id="sessionBar"></div>
+
+  <!-- Contadores -->
+  <div class="stats">
+    <div class="stat-box">
+      <span class="stat-label">Libres</span>
+      <span id="availCount" class="stat-val val-avail">1000</span>
+    </div>
+    <div class="stat-box vendor-only">
+      <span class="stat-label">Pendiente</span>
+      <span id="pendingCount" class="stat-val val-pending">0</span>
+    </div>
+    <div class="stat-box vendor-only">
+      <span class="stat-label">Pagados</span>
+      <span id="paidCount" class="stat-val val-paid">0</span>
+    </div>
+    <div class="stat-box vendor-only">
+      <span class="stat-label">Recaudado</span>
+      <span id="totalMoney" class="stat-val val-money">$0</span>
+    </div>
+  </div>
+
+  <!-- Buscador y Ajustes -->
+  <div class="controls">
+    <div class="search-row vendor-only">
+      <input type="text" id="searchNameInput" placeholder="🔍 Buscar por nombre de comprador...">
+    </div>
+    <div class="config-row vendor-only">
+      <div>
+        <label for="ticketPrice">Precio ($):</label>
+        <input type="number" id="ticketPrice" value="20000">
+      </div>
+    </div>
+    <div class="sheet-tabs-row">
+      <label>Planilla:</label>
+      <div class="sheet-tabs" id="sheetTabs"></div>
+    </div>
+  </div>
+
+  <!-- Cuadrícula -->
+  <div class="grid" id="grid"></div>
+
+  <!-- Botón Descargar Imagen de la Planilla (público y vendedores) -->
+  <div class="pdf-btn-container">
+    <button class="btn-pdf btn-download-img" id="downloadImgBtn" onclick="downloadSheetImage()">🖼️ Descargar planilla</button>
+  </div>
+
+  <!-- Botón Generar PDF al Pie (solo vendedores) -->
+  <div class="pdf-btn-container vendor-only">
+    <button class="btn-pdf" onclick="generatePDF()">📄 Generar Reporte / Imprimir PDF</button>
+  </div>
+
+  <!-- Modal / Ventana Emergente -->
+  <div id="modalOverlay" class="modal-overlay hidden">
+    <div class="modal">
+      <h2 id="modalTitle">Número 000</h2>
+      <div id="modalBody"></div>
+    </div>
+  </div>
+
+</body>
+</html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
