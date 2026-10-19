@@ -56,19 +56,21 @@
     .card.paid { background: #dcfce7; border-color: #22c55e; color: #15803d; }
     .card.paid::after { content: "X"; position: absolute; top: 1px; right: 3px; font-size: 0.65rem; color: #16a34a; font-weight: 900; }
 
-    /* Estado: Ocupado (vista pública, sin distinguir pendiente/pagado) -> Dorado oscuro */
+    /* Estado: Ocupado (vista pública) -> Dorado oscuro */
     .card.taken { background: #fef3c7; border-color: #d97706; color: #b45309; }
     .card.taken::after { content: "X"; position: absolute; top: 1px; right: 3px; font-size: 0.65rem; color: #d97706; font-weight: 900; }
 
-    /* Elementos exclusivos de vendedores logueados: ocultos por defecto */
+    /* Elementos exclusivos de vendedores logueados */
     .vendor-only { display: none; }
     body.is-vendor .vendor-only { display: flex; }
     body.is-vendor .stats { justify-content: space-around; }
     body:not(.is-vendor) .stats { justify-content: center; }
 
-    /* Botón de PDF al Final */
-    .pdf-btn-container { max-width: 500px; margin: 25px auto 10px auto; }
+    /* Botones principales */
+    .pdf-btn-container { max-width: 500px; margin: 15px auto 10px auto; }
     .btn-pdf { width: 100%; background: #d97706; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .btn-pdf.btn-download-img { background: #d97706; }
+    .btn-pdf.btn-duplicate { background: #8b5cf6; }
     .btn-pdf:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn-pdf:active { transform: scale(0.98); }
 
@@ -77,13 +79,13 @@
     .session-bar span { font-size: 0.75rem; color: #bae6fd; }
     .session-bar a { font-size: 0.75rem; color: #fca5a5; font-weight: bold; text-decoration: none; margin-left: 8px; cursor: pointer; }
 
-   /* Líneas 68-73 */
-   .payment-info-box { background: #075985; border: 1px solid #0369a1; border-radius: 10px; padding: 16px 22px; margin: 0 auto 15px auto; max-width: 456px; text-align: left; }
-   .payment-info-box .payment-value { color: #ffffff; font-size: 1.15rem; font-weight: 800; margin: 0 0 10px 0; text-align: center; }
-   .payment-info-box .payment-line { color: #ffffff; font-size: 0.95rem; margin: 0 0 4px 0; }
-   .payment-info-box .payment-line-last { margin: 0 0 10px 0; }
-   .payment-info-box .payment-legend { color: #d97706; font-size: 0.85rem; font-weight: 800; margin: 0; text-align: center; }
-   
+    /* Cuadro de información de pago */
+    .payment-info-box { background: #075985; border: 1px solid #0369a1; border-radius: 10px; padding: 16px 22px; margin: 0 auto 15px auto; max-width: 456px; text-align: left; }
+    .payment-info-box .payment-value { color: #ffffff; font-size: 1.15rem; font-weight: 800; margin: 0 0 10px 0; text-align: center; }
+    .payment-info-box .payment-line { color: #ffffff; font-size: 0.95rem; margin: 0 0 4px 0; }
+    .payment-info-box .payment-line-last { margin: 0 0 10px 0; }
+    .payment-info-box .payment-legend { color: #d97706; font-size: 0.85rem; font-weight: 800; margin: 0; text-align: center; }
+    
     /* Ventana Emergente (Modal) */
     .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; padding: 15px; }
     .modal-overlay.hidden { display: none; }
@@ -139,7 +141,7 @@
     let allData = {};
     let selectedNum = null;
     let currentUser = null;
-    let pendingAction = null; // función a ejecutar una vez logueado
+    let pendingAction = null;
 
     const grid = document.getElementById('grid');
     const sheetTabs = document.getElementById('sheetTabs');
@@ -260,92 +262,145 @@
       document.getElementById('paymentValue').innerText = 'Valor del número: $' + price.toLocaleString('es-AR');
     }
 
-// Descargar la planilla actual como imagen (PNG) con ocupados en ROJO, texto blanco y "X"
-window.downloadSheetImage = async () => {
-  const btn = document.getElementById('downloadImgBtn');
-  const originalText = btn.innerText;
-  btn.disabled = true;
-  btn.innerText = 'Generando...';
+    // Descargar la planilla actual como imagen (PNG)
+    window.downloadSheetImage = async () => {
+      const btn = document.getElementById('downloadImgBtn');
+      const originalText = btn.innerText;
+      btn.disabled = true;
+      btn.innerText = 'Generando...';
 
-  const start = String(currentSheet * 100).padStart(3, '0');
-  const end = String((currentSheet * 100) + 99).padStart(3, '0');
-  const price = parseFloat(document.getElementById('ticketPrice').value) || 0;
+      const start = String(currentSheet * 100).padStart(3, '0');
+      const end = String((currentSheet * 100) + 99).padStart(3, '0');
+      const price = parseFloat(document.getElementById('ticketPrice').value) || 0;
 
-  // Contenedor fuera de pantalla con dimensiones reales para que html2canvas lo mida bien
-  const hiddenWrapper = document.createElement('div');
-  hiddenWrapper.style.cssText = 'position: absolute; left: -9999px; top: 0; width: 780px; z-index: -1;';
+      const hiddenWrapper = document.createElement('div');
+      hiddenWrapper.style.cssText = 'position: absolute; left: -9999px; top: 0; width: 780px; z-index: -1;';
 
-  const exportDiv = document.createElement('div');
-  exportDiv.style.cssText = 'background:#0c4a6e; padding:28px; width:780px; font-family:system-ui,-apple-system,sans-serif; text-align:center;';
+      const exportDiv = document.createElement('div');
+      exportDiv.style.cssText = 'background:#0c4a6e; padding:28px; width:780px; font-family:system-ui,-apple-system,sans-serif; text-align:center;';
 
-  // HTML con datos de pago hardcodeados con estilos inline para garantizar renderizado
-  
-  exportDiv.innerHTML = `
-    <h2 style="color:#d97706; font-size:2rem; margin:0 0 4px 0; font-weight:800;">Gran rifa solidaria</h2>
-    <p style="color:#bae6fd; font-size:1.1rem; margin:0 0 16px 0;">Planilla ${currentSheet + 1} (${start} al ${end})</p>
-    
-    <div style="background:#075985; border:1px solid #0369a1; border-radius:10px; padding:16px 22px; margin:0 auto 20px auto; max-width:456px; text-align:left; color:#ffffff;">
-      <p style="color:#ffffff; font-size:1.25rem; font-weight:800; margin:0 0 10px 0; text-align:center;">Valor del número: $${price.toLocaleString('es-AR')}</p>
-      <p style="color:#ffffff; font-size:1.1rem; font-weight:700; margin:0 0 6px 0;">Alias: chiki.cirugia.mp</p>
-      <p style="color:#ffffff; font-size:1.1rem; font-weight:700; margin:0 0 6px 0;">Titular: Silvia Susana Lescano</p>
-      <p style="color:#ffffff; font-size:1.1rem; font-weight:700; margin:0 0 10px 0;">Cel: 3854767563</p>
-      <p style="color:#d97706; font-size:0.9rem; font-weight:800; margin:0; text-align:center;">Se tomará en cuenta el comprobante</p>
-    </div>
-  `;
+      exportDiv.innerHTML = `
+        <h2 style="color:#d97706; font-size:2rem; margin:0 0 4px 0; font-weight:800;">Gran rifa solidaria</h2>
+        <p style="color:#bae6fd; font-size:1.1rem; margin:0 0 16px 0;">Planilla ${currentSheet + 1} (${start} al ${end})</p>
+        
+        <div style="background:#075985; border:1px solid #0369a1; border-radius:10px; padding:16px 22px; margin:0 auto 20px auto; max-width:456px; text-align:left; color:#ffffff;">
+          <p style="color:#ffffff; font-size:1.25rem; font-weight:800; margin:0 0 10px 0; text-align:center;">Valor del número: $${price.toLocaleString('es-AR')}</p>
+          <p style="color:#ffffff; font-size:1.1rem; font-weight:700; margin:0 0 6px 0;">Alias: chiki.cirugia.mp</p>
+          <p style="color:#ffffff; font-size:1.1rem; font-weight:700; margin:0 0 6px 0;">Titular: Silvia Susana Lescano</p>
+          <p style="color:#ffffff; font-size:1.1rem; font-weight:700; margin:0 0 10px 0;">Cel: 3854767563</p>
+          <p style="color:#d97706; font-size:0.9rem; font-weight:800; margin:0; text-align:center;">Se tomará en cuenta el comprobante</p>
+        </div>
+      `;
 
-  const exportGrid = document.createElement('div');
-  exportGrid.style.cssText = 'display:grid; grid-template-columns:repeat(10, 1fr); gap:8px; max-width:740px; margin:0 auto;';
+      const exportGrid = document.createElement('div');
+      exportGrid.style.cssText = 'display:grid; grid-template-columns:repeat(10, 1fr); gap:8px; max-width:740px; margin:0 auto;';
 
-  const startNum = currentSheet * 100;
-  for (let i = startNum; i < startNum + 100; i++) {
-    const numStr = String(i).padStart(3, '0');
-    const info = allData[numStr];
-    const cell = document.createElement('div');
-    cell.style.cssText = 'border-radius:6px; padding:16px 0; font-weight:800; font-size:1.15rem; position:relative;';
+      const startNum = currentSheet * 100;
+      for (let i = startNum; i < startNum + 100; i++) {
+        const numStr = String(i).padStart(3, '0');
+        const info = allData[numStr];
+        const cell = document.createElement('div');
+        cell.style.cssText = 'border-radius:6px; padding:16px 0; font-weight:800; font-size:1.15rem; position:relative;';
 
-    if (info && (info.status === 'paid' || info.status === 'pending')) {
-      // Ocupado (Rojo)
-      cell.style.background = '#c47a7a';
-      cell.style.border = '2px solid #b06666';
-      cell.style.color = '#7f1d1d';
-      cell.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.2)';
-      cell.innerHTML = `${numStr}<span style="position:absolute; top:2px; right:4px; font-size:0.75rem; color:#7f1d1d; font-weight:900;">X</span>`;
-    } else {
-      // Libre (Azul)
-      cell.style.background = '#075985';
-      cell.style.border = '2px solid #0369a1';
-      cell.style.color = '#ffffff';
-      cell.innerText = numStr;
-    }
+        if (info && (info.status === 'paid' || info.status === 'pending')) {
+          cell.style.background = '#c47a7a';
+          cell.style.border = '2px solid #b06666';
+          cell.style.color = '#7f1d1d';
+          cell.style.boxShadow = '0 2px 4px rgba(0, 0, 0, 0.2)';
+          cell.innerHTML = `${numStr}<span style="position:absolute; top:2px; right:4px; font-size:0.75rem; color:#7f1d1d; font-weight:900;">X</span>`;
+        } else {
+          cell.style.background = '#075985';
+          cell.style.border = '2px solid #0369a1';
+          cell.style.color = '#ffffff';
+          cell.innerText = numStr;
+        }
 
-    exportGrid.appendChild(cell);
-  }
-  exportDiv.appendChild(exportGrid);
+        exportGrid.appendChild(cell);
+      }
+      exportDiv.appendChild(exportGrid);
 
-  const footer = document.createElement('p');
-  footer.style.cssText = 'color:#bae6fd; font-size:0.85rem; margin-top:20px; margin-bottom: 0;';
-  footer.innerText = 'Estado de números al ' + new Date().toLocaleString('es-AR');
-  exportDiv.appendChild(footer);
+      const footer = document.createElement('p');
+      footer.style.cssText = 'color:#bae6fd; font-size:0.85rem; margin-top:20px; margin-bottom: 0;';
+      footer.innerText = 'Estado de números al ' + new Date().toLocaleString('es-AR');
+      exportDiv.appendChild(footer);
 
-  hiddenWrapper.appendChild(exportDiv);
-  document.body.appendChild(hiddenWrapper);
+      hiddenWrapper.appendChild(exportDiv);
+      document.body.appendChild(hiddenWrapper);
 
-  await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
 
-  try {
-    const canvas = await html2canvas(exportDiv, { backgroundColor: '#0c4a6e', scale: 2 });
-    const link = document.createElement('a');
-    link.download = `rifa-planilla-${currentSheet + 1}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-  } catch (err) {
-    alert('No se pudo generar la imagen: ' + err.message);
-  }
+      try {
+        const canvas = await html2canvas(exportDiv, { backgroundColor: '#0c4a6e', scale: 2 });
+        const link = document.createElement('a');
+        link.download = `rifa-planilla-${currentSheet + 1}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      } catch (err) {
+        alert('No se pudo generar la imagen: ' + err.message);
+      }
 
-  document.body.removeChild(hiddenWrapper);
-  btn.disabled = false;
-  btn.innerText = originalText;
-};
+      document.body.removeChild(hiddenWrapper);
+      btn.disabled = false;
+      btn.innerText = originalText;
+    };
+
+    // Función para duplicar números asignándolos de forma aleatoria
+    window.duplicateNumbersRandomly = async () => {
+      const entries = Object.entries(allData);
+      if (entries.length === 0) {
+        alert("No hay números vendidos para duplicar.");
+        return;
+      }
+
+      const availableNumbers = [];
+      for (let i = 0; i < 1000; i++) {
+        const numStr = String(i).padStart(3, '0');
+        if (!allData[numStr]) {
+          availableNumbers.push(numStr);
+        }
+      }
+
+      if (availableNumbers.length < entries.length) {
+        alert(`No hay suficientes números libres para duplicar todas las compras.\nComprados: ${entries.length}\nLibres: ${availableNumbers.length}`);
+        return;
+      }
+
+      const confirmAction = confirm(
+        `Se van a duplicar los ${entries.length} números asignados.\n` +
+        `Se asignarán ${entries.length} números libres de forma aleatoria entre los compradores actuales.\n\n` +
+        `¿Deseas continuar?`
+      );
+
+      if (!confirmAction) return;
+
+      // Mezclar aleatoriamente los números disponibles (Fisher-Yates)
+      for (let i = availableNumbers.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [availableNumbers[i], availableNumbers[j]] = [availableNumbers[j], availableNumbers[i]];
+      }
+
+      const updates = {};
+      let freeIndex = 0;
+
+      entries.forEach(([originalNum, info]) => {
+        const assignedNum = availableNumbers[freeIndex];
+        updates[`numbers/${assignedNum}`] = {
+          buyer: info.buyer,
+          seller: info.seller || 'Sin especificar',
+          status: info.status || 'pending',
+          assignedFrom: originalNum
+        };
+        freeIndex++;
+      });
+
+      try {
+        await update(ref(db), updates);
+        alert(`¡Asignación completada con éxito! Se asignaron ${entries.length} nuevos números aleatorios.`);
+      } catch (err) {
+        alert("Error al actualizar la base de datos: " + err.message);
+      }
+    };
+
     // Generar e Imprimir PDF
     window.generatePDF = () => {
       const printWindow = window.open('', '_blank');
@@ -463,7 +518,6 @@ window.downloadSheetImage = async () => {
       modalBody.innerHTML = html;
     }
 
-    // Exige sesión iniciada antes de ejecutar una acción de escritura
     function requireLogin(action) {
       if (currentUser) {
         action();
@@ -518,14 +572,12 @@ window.downloadSheetImage = async () => {
         });
     }
 
-    // Escapa HTML para evitar XSS al insertar datos de compradores/vendedores
     function escapeHtml(str) {
       const div = document.createElement('div');
       div.textContent = str ?? '';
       return div.innerHTML;
     }
 
-    // Abrir Modal de Número Individual
     function openModal(numStr, info) {
       selectedNum = numStr;
       modalOverlay.classList.remove('hidden');
@@ -567,7 +619,6 @@ window.downloadSheetImage = async () => {
       }
     }
 
-    // Modo Edición de Datos Existentes
     window.editDetails = () => {
       const info = allData[selectedNum] || {};
       modalTitle.innerText = `Editar Número ${selectedNum}`;
@@ -603,7 +654,6 @@ window.downloadSheetImage = async () => {
       closeModal();
     };
 
-    // Funciones de Acción
     window.saveNumber = (status) => {
       const buyer = document.getElementById('buyerInput').value.trim();
       const seller = document.getElementById('sellerInput').value.trim();
@@ -649,7 +699,7 @@ window.downloadSheetImage = async () => {
 
   <div class="session-bar" id="sessionBar"></div>
 
-  <!-- Datos de pago (visible en la página, se clona para la imagen descargable) -->
+  <!-- Datos de pago -->
   <div class="payment-info-box" id="paymentInfoBox">
     <p class="payment-value" id="paymentValue">Valor del número: $0</p>
     <p class="payment-line">Alias: chiki.cirugia.mp</p>
@@ -698,9 +748,14 @@ window.downloadSheetImage = async () => {
   <!-- Cuadrícula -->
   <div class="grid" id="grid"></div>
 
-  <!-- Botón Descargar Imagen de la Planilla (público y vendedores) -->
+  <!-- Botón Descargar Imagen de la Planilla -->
   <div class="pdf-btn-container">
     <button class="btn-pdf btn-download-img" id="downloadImgBtn" onclick="downloadSheetImage()">🖼️ Descargar planilla</button>
+  </div>
+
+  <!-- Botón de Duplicar Números Aleatoriamente (solo vendedores) -->
+  <div class="pdf-btn-container vendor-only">
+    <button class="btn-pdf btn-duplicate" onclick="duplicateNumbersRandomly()">🎲 Duplicar números asignando aleatoriamente</button>
   </div>
 
   <!-- Botón Generar PDF al Pie (solo vendedores) -->
